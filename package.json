@@ -9,7 +9,11 @@
       "lint": "eslint",
       "db:push": "drizzle-kit push",
       "db:studio": "drizzle-kit studio",
-      "db:seed": "tsx src/db/seed.ts"
+      "db:seed": "tsx src/db/seed.ts",
+      "db:import": "tsx src/db/import-people.ts",
+      "agent:create": "tsx src/scripts/agent-create.ts",
+      "cmd": "tsx src/scripts/cmd.ts",
+      "status": "tsx src/scripts/status.ts"
    },
    "dependencies": {
       "@base-ui/react": "^1.9.0",

@@ -1,0 +1,99 @@
+pin,name,type,class,position,status
+1001,Yusuf Nugroho,staff,,Kepala Sekolah,active
+2001,Heru Kurniawan,staff,,Guru,active
+2002,Indri Astutik,staff,,Guru,active
+2003,Khobid Azwar Anas,staff,,Guru,active
+2004,M. I. Khoironi,staff,,Guru,active
+2005,Ngatirah,staff,,Guru,active
+2006,Ulfa Zekiyatul Iltiqo,staff,,Guru,active
+2007,Haniyatus Syuhriyah,staff,,Guru,active
+2008,Merisa,staff,,Guru,active
+2009,Addin Septyan Ridho A.,staff,,Guru,active
+2010,Vina Niswatul Mufidah,staff,,Guru,active
+2011,Hepy Handariatul M.,staff,,Guru,active
+2012,Mahya Aliya,staff,,Guru,active
+5001,Bunga Ayu Setyowati,student,XI-BD,Siswa,active
+5002,Devina Putri Anggrahini,student,XI-BD,Siswa,inactive
+5003,Dilla Febri Wiyanti,student,XI-BD,Siswa,active
+5004,M. Irwan Budiansyah,student,XI-BD,Siswa,active
+5005,Maulana Arrohman,student,XI-BD,Siswa,active
+5006,Muh. Sirojul Huda,student,XI-BD,Siswa,active
+5007,Tasya Ayu Maharani,student,XI-BD,Siswa,active
+5008,Zulfia Khusnul Karimah,student,XI-BD,Siswa,active
+5009,Aditya Farid Prayoga,student,XI-TKR,Siswa,active
+5010,Ahmad Firdan Dahrul S.,student,XI-TKR,Siswa,inactive
+5011,Andrian Febri Yanto,student,XI-TKR,Siswa,inactive
+5012,Arenggo Reza Setiawan,student,XI-TKR,Siswa,active
+5013,Ari Fuad Firmansyah,student,XI-TKR,Siswa,active
+5014,Arif Prasetyo,student,XI-TKR,Siswa,active
+5015,Dian Galang Saputra,student,XI-TKR,Siswa,active
+5016,Ega Ahmad Farisky,student,XI-TKR,Siswa,active
+5017,Farel Dita Afandi,student,XI-TKR,Siswa,active
+5018,Galang Setyo Pratama,student,XI-TKR,Siswa,inactive
+5019,Iznandar Zuhaimi,student,XI-TKR,Siswa,inactive
+5020,Marsya Aurelia Agata P.,student,XI-TKR,Siswa,inactive
+5021,Muhammad Ferdy Baktian,student,XI-TKR,Siswa,active
+5022,Roni Rudiyanto,student,XI-TKR,Siswa,inactive
+5023,Diyah Galuh Pratiwi,student,XII-AK,Siswa,inactive
+5024,Risma Nurwidya Putri,student,XII-AK,Siswa,inactive
+5025,Sella Agustina,student,XII-AK,Siswa,active
+5026,Umi Syemiasih,student,XII-AK,Siswa,active
+5027,Anggita Febri Arianti,student,XII-BD,Siswa,inactive
+5028,Anggun Dispa Kusmiati,student,XII-BD,Siswa,active
+5029,Florenze Vienetta P. L.,student,XII-BD,Siswa,active
+5030,Irma Nashila Kirani,student,XII-BD,Siswa,inactive
+5031,Lailatul Qodriyah,student,XII-BD,Siswa,active
+5032,Mauliyah Setiyowati,student,XII-BD,Siswa,active
+5033,Muh. Dwi Fitriyanto,student,XII-BD,Siswa,active
+5034,Ridho Hadi Wibowo,student,XII-BD,Siswa,inactive
+5035,Risqi Aqmal,student,XII-BD,Siswa,inactive
+5036,Satryo Ahmad Maulana,student,XII-BD,Siswa,inactive
+5037,Seynata Keyla Fajarina,student,XII-BD,Siswa,active
+5038,Sheriz Eka Syifana A.,student,XII-BD,Siswa,active
+5039,Yeni Pangesti,student,XII-BD,Siswa,active
+5040,Ahmad Alvin Fadli H.,student,XII-TKR,Siswa,inactive
+5041,Anas Makruf Khaidor,student,XII-TKR,Siswa,active
+5042,Andika Rizzal Saputra,student,XII-TKR,Siswa,active
+5043,Aril Anggara,student,XII-TKR,Siswa,inactive
+5044,Aziz Syahputra,student,XII-TKR,Siswa,active
+5045,David Kurniawan,student,XII-TKR,Siswa,active
+5046,Desta Aprilio Saputra,student,XII-TKR,Siswa,active
+5047,Dista Wira Pranata,student,XII-TKR,Siswa,active
+5048,Hikmal Akbar El Mauludi,student,XII-TKR,Siswa,active
+5049,Iqbal Fadilah,student,XII-TKR,Siswa,active
+5050,Moh. Candra Edi Saputra,student,XII-TKR,Siswa,active
+5051,Muhammad Rizqi Ananda P.,student,XII-TKR,Siswa,active
+5052,Nanda Aldiansyah,student,XII-TKR,Siswa,active
+5053,Nur Kalimi,student,XII-TKR,Siswa,active
+5054,Pingki Ardiansah,student,XII-TKR,Siswa,active
+5055,Rama Rehan Kurniawan,student,XII-TKR,Siswa,inactive
+5056,Riyo Hadi Setiyawan,student,XII-TKR,Siswa,inactive
+5057,Rizqi Ramadhani,student,XII-TKR,Siswa,inactive
+5058,Slamet Suwondo,student,XII-TKR,Siswa,inactive
+5087,Afnan Hafidh Abdillah,student,X-TKR,Siswa,active
+5088,Ahmad Arif Sofyan,student,X-TKR,Siswa,active
+5089,Ahmad Rubbilal Azhar,student,X-TKR,Siswa,active
+5090,Anas Arip Puat Anwar,student,X-TKR,Siswa,inactive
+5091,Egga Aditya Indra P.,student,X-TKR,Siswa,active
+5092,Galang Setyo Pratama,student,X-TKR,Siswa,inactive
+5093,Junior Eza Renandra,student,X-TKR,Siswa,active
+5094,Mohamad Jaka Setiawan,student,X-TKR,Siswa,active
+5095,Muhammad Jorgi Ardiano,student,X-TKR,Siswa,active
+5096,Muhammad Zidan Azka,student,X-TKR,Siswa,active
+5097,Rio Fajri Ananta,student,X-TKR,Siswa,inactive
+5098,Riski Wahyu Nur Pratama,student,X-TKR,Siswa,active
+5099,Swyke Jaya Ningrat,student,X-TKR,Siswa,inactive
+5100,Very Saputra,student,X-TKR,Siswa,active
+5101,Auliya Zakiya,student,X-BD,Siswa,active
+5102,Desta Maysilla,student,X-BD,Siswa,active
+5103,Ega Karis Yulianto,student,X-BD,Siswa,inactive
+5104,Erip Rimba Pradana,student,X-BD,Siswa,inactive
+5105,Noval Aditya Kurniawan,student,X-BD,Siswa,active
+5106,Yulia Angel Puspitasari,student,X-BD,Siswa,active
+5107,Ahmad Hakim Afdilah,student,X-TKR,Siswa,active
+5108,Khalimatus Sakdizah,student,X-AK,Siswa,active
+5109,Lailatul Rahmadania,student,X-AK,Siswa,active
+5110,Mohamad Zaky Fardhan,student,X-TKR,Siswa,active
+5111,Mohammad Rizki A.,student,X-AK,Siswa,inactive
+5112,Putri Rohmah Asminanti,student,X-AK,Siswa,active
+5113,Robit Musyaddad,student,X-TKR,Siswa,active
