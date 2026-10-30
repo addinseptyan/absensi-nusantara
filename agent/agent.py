@@ -122,8 +122,10 @@ def do_sync(cfg: dict, last_log_at: str | None, trigger: str) -> dict:
         run_id, new_total = None, 0
         chunks = [rows[i:i + BATCH] for i in range(0, len(rows), BATCH)] or [[]]
         for i, chunk in enumerate(chunks):
-            res = api("/api/agent/logs", {"syncRunId": run_id, "trigger": trigger, "logs": chunk,
-                                          "final": i == len(chunks) - 1})
+            body = {"trigger": trigger, "logs": chunk, "final": i == len(chunks) - 1}
+            if run_id:
+                body["syncRunId"] = run_id
+            res = api("/api/agent/logs", body)
             run_id, new_total = res["syncRunId"], new_total + res["new"]
         log("info", f"Sync selesai: {len(rows)} data dikirim, {new_total} baru.")
         return {"fetched": len(rows), "new": new_total, "totalOnDevice": len(records), "syncRunId": run_id}
@@ -230,22 +232,27 @@ def run_due_schedules(hb: dict, state: dict):
         return
     now = datetime.now(timezone.utc).astimezone(TZ)
     today = now.date().isoformat()
+    due = []
     for sch in hb["schedules"]:
         key = str(sch["id"])
-        if now.isoweekday() not in sch["weekdays"] or state["ran"].get(key) == today:
-            continue
-        if time.time() < state.get("retry", {}).get(key, 0):  # jeda sebelum mencoba ulang setelah gagal
-            continue
         h, m = map(int, sch["runAt"].split(":"))
-        if now >= now.replace(hour=h, minute=m, second=0, microsecond=0):  # juga mengejar jadwal yang terlewat
-            log("info", f"Menjalankan sync terjadwal {sch['runAt']}")
-            try:
-                do_sync(hb["device"], hb["lastLogAt"], "schedule")
-            except DeviceError:
-                state.setdefault("retry", {})[key] = time.time() + 600  # coba lagi 10 menit kemudian
-            else:
-                state["ran"][key] = today
-            save_state(state)
+        passed = now >= now.replace(hour=h, minute=m, second=0, microsecond=0)
+        if (now.isoweekday() in sch["weekdays"] and passed and state["ran"].get(key) != today
+                and time.time() >= state.get("retry", {}).get(key, 0)):
+            due.append(sch)
+    if not due:
+        return
+    # Satu sync sudah cukup untuk semua jadwal yang jatuh tempo (termasuk yang terlewat)
+    log("info", "Menjalankan sync terjadwal: " + ", ".join(s["runAt"] for s in due))
+    try:
+        do_sync(hb["device"], hb["lastLogAt"], "schedule")
+    except DeviceError:
+        for sch in due:  # coba lagi 10 menit kemudian
+            state.setdefault("retry", {})[str(sch["id"])] = time.time() + 600
+    else:
+        for sch in due:
+            state["ran"][str(sch["id"])] = today
+    save_state(state)
 
 
 def main():
