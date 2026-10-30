@@ -3,7 +3,6 @@ import { z } from "zod";
 import { db, schema as s } from "@/db";
 import { authenticateAgent, badRequest, unauthorized } from "@/lib/agent-auth";
 
-export const dynamic = "force-dynamic";
 
 const Body = z.object({
   version: z.string().max(40).optional(),
