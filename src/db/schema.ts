@@ -279,6 +279,7 @@ export const rulePeriods = pgTable("rule_periods", {
   checkInWindowEnd: time().notNull().default("10:00"), // scan masuk paling akhir
   onTimeGraceMin: integer().notNull().default(0), // toleransi tepat waktu
   checkOutEarlyMin: integer().notNull().default(30), // pulang > X menit sebelum jam pulang = pulang awal
+  minGapBetweenScansMin: integer().notNull().default(30), // scan pulang minimal X menit setelah scan masuk (abaikan scan ganda)
   checkOutWindowEnd: time().notNull().default("18:00"), // scan pulang paling akhir
   isActive: boolean().notNull().default(true),
 });

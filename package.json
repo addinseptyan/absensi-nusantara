@@ -13,7 +13,11 @@
       "db:import": "tsx src/db/import-people.ts",
       "agent:create": "tsx src/scripts/agent-create.ts",
       "cmd": "tsx src/scripts/cmd.ts",
-      "status": "tsx src/scripts/status.ts"
+      "status": "tsx src/scripts/status.ts",
+      "test:rules": "tsx --test src/lib/attendance/engine.test.ts",
+      "recompute": "tsx src/scripts/recompute.ts",
+      "calendar": "tsx src/scripts/calendar.ts",
+      "workdays": "tsx src/scripts/workdays.ts"
    },
    "dependencies": {
       "@base-ui/react": "^1.9.0",
@@ -25,6 +29,8 @@
       "cn": "^0.5.1",
       "dotenv": "^18.0.9",
       "drizzle-orm": "^0.45.4",
+      "jose": "^6.2.14",
+      "lucide-react": "^1.65.0",
       "next": "16.4.3",
       "react": "19.3.0",
       "react-dom": "19.3.0",
