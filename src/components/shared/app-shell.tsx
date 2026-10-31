@@ -8,15 +8,15 @@ import { can, type PermissionCode } from "@/lib/permissions";
 import { GlassCard } from "./glass-card";
 
 // Menu baru = tambah satu baris di sini. Menu otomatis disembunyikan jika izinnya tidak ada.
-const NAV: { href: string; label: string; icon: typeof Activity; perm: PermissionCode }[] = [
+const NAV: { href: string; label: string; icon: typeof Activity; perm: PermissionCode | PermissionCode[] }[] = [
   { href: "/kesehatan", label: "Kesehatan sistem", icon: Activity, perm: "system.health" },
-  { href: "/rekap", label: "Rekap kehadiran", icon: LayoutDashboard, perm: "rekap.view_all" },
+  { href: "/rekap", label: "Rekap kehadiran", icon: LayoutDashboard, perm: ["rekap.view_all", "rekap.view_own_class"] },
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const items = NAV.filter((n) => can(user.permissions, n.perm));
+  const items = NAV.filter((n) => [n.perm].flat().some((p) => can(user.permissions, p)));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-slate-100 to-teal-50 p-3 md:p-5">

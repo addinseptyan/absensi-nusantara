@@ -9,7 +9,7 @@ import { readSession } from "./session";
 export const getCurrentUser = cache(async () => {
   const uid = await readSession();
   if (!uid) return null;
-  const [u] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email, isActive: s.users.isActive })
+  const [u] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email, personId: s.users.personId, isActive: s.users.isActive })
     .from(s.users).where(eq(s.users.id, uid));
   if (!u?.isActive) return null;
   const rows = await db.selectDistinct({ code: s.rolePermissions.permissionCode })
