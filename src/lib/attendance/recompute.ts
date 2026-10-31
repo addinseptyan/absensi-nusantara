@@ -106,3 +106,10 @@ export async function recompute(from: string, to: string) {
     && d <= (syncedAt ? localParts(syncedAt).date : end));
   return summary;
 }
+
+/** Hitung ulang otomatis setelah perubahan kalender/aturan, hanya jika rentangnya kecil. Mengembalikan false jika dilewati. */
+export async function recomputeCapped(from: string, to: string, maxDays = 62) {
+  if (eachDate(from, to).length > maxDays) return false;
+  await recompute(from, to);
+  return true;
+}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, ClipboardCheck, LayoutDashboard, LogOut, ShieldCheck, Users } from "lucide-react";
+import { Activity, CalendarDays, ClipboardCheck, Clock, LayoutDashboard, LogOut, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/login/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -10,6 +10,8 @@ import { GlassCard } from "./glass-card";
 // Menu baru = tambah satu baris di sini. Menu otomatis disembunyikan jika izinnya tidak ada.
 const NAV: { href: string; label: string; icon: typeof Activity; perm: PermissionCode | PermissionCode[] }[] = [
   { href: "/koreksi", label: "Koreksi kehadiran", icon: ClipboardCheck, perm: ["attendance.correct", "leave.create_own_class"] },
+  { href: "/kalender", label: "Kalender", icon: CalendarDays, perm: "calendar.manage" },
+  { href: "/aturan", label: "Aturan jam", icon: Clock, perm: "settings.rules" },
   { href: "/pengguna", label: "Pengguna", icon: Users, perm: "user.manage" },
   { href: "/hak-akses", label: "Hak akses", icon: ShieldCheck, perm: "role.manage" },
   { href: "/kesehatan", label: "Kesehatan sistem", icon: Activity, perm: "system.health" },
