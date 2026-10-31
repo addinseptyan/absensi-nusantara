@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Activity, CalendarDays, Check, ClipboardCheck, Clock, LayoutDashboard, LogOut, ShieldCheck, Users } from "lucide-react";
+import { Activity, CalendarDays, Check, ClipboardCheck, Clock, GraduationCap, LayoutDashboard, LogOut, ShieldCheck, Users } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { can, type PermissionCode } from "@/lib/permissions";
@@ -10,6 +10,7 @@ import { MobileMenu, NavLink } from "./nav";
 const NAV: { href: string; label: string; icon: typeof Activity; perm: PermissionCode | PermissionCode[] }[] = [
   { href: "/rekap", label: "Rekap kehadiran", icon: LayoutDashboard, perm: ["rekap.view_all", "rekap.view_own_class"] },
   { href: "/koreksi", label: "Koreksi kehadiran", icon: ClipboardCheck, perm: ["attendance.correct", "leave.create_own_class"] },
+  { href: "/data", label: "Data siswa & guru", icon: GraduationCap, perm: ["student.manage", "staff.manage"] },
   { href: "/kalender", label: "Kalender", icon: CalendarDays, perm: "calendar.manage" },
   { href: "/aturan", label: "Aturan jam", icon: Clock, perm: "settings.rules" },
   { href: "/pengguna", label: "Pengguna", icon: Users, perm: "user.manage" },

@@ -77,6 +77,8 @@ export const people = pgTable(
     id: id(),
     type: personType().notNull(),
     name: text().notNull(),
+    titlePrefix: text(), // gelar depan, mis. "Drs."
+    titleSuffix: text(), // gelar belakang, mis. "S.Pd., M.Pd."
     nisn: text(), // siswa
     nis: text(), // siswa
     nip: text(), // guru/pegawai

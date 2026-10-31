@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import { eq, inArray } from "drizzle-orm";
 import { db, schema as s } from "@/db";
 import { studentSummary, visibleClasses } from "@/lib/attendance/summary";
+import { fullName } from "@/lib/person";
 
 type User = { personId: number | null; permissions: string[] };
 const HEAD = ["No", "Nama", "Kelas", "Hari efektif", "Hadir", "Terlambat", "Izin", "Sakit", "Dispensasi", "PKL", "Alpa", "Kehadiran"];
@@ -18,7 +19,7 @@ export async function loadRekap(user: User, from: string, to: string, kelasId?: 
   const [cfg, wali] = await Promise.all([
     db.select().from(s.settings).where(inArray(s.settings.key, ["school_name", "principal_name"])),
     selected
-      ? db.select({ name: s.people.name }).from(s.classes).innerJoin(s.people, eq(s.people.id, s.classes.homeroomStaffId)).where(eq(s.classes.id, selected.id))
+      ? db.select({ name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix }).from(s.classes).innerJoin(s.people, eq(s.people.id, s.classes.homeroomStaffId)).where(eq(s.classes.id, selected.id))
       : Promise.resolve([]),
   ]);
   const setting = (k: string) => String(cfg.find((c) => c.key === k)?.value ?? "");
@@ -28,7 +29,7 @@ export async function loadRekap(user: User, from: string, to: string, kelasId?: 
   const total: (string | number | null)[] = ["", "Total", "", sum(3), sum(4), sum(5), sum(6), sum(7), sum(8), sum(9), sum(10), effective ? Math.round((present / effective) * 1000) / 10 : null];
 
   return {
-    school: setting("school_name") || "SMKS Nusantara Banyuwangi", principal: setting("principal_name"), wali: wali[0]?.name ?? "",
+    school: setting("school_name") || "SMKS Nusantara Banyuwangi", principal: setting("principal_name"), wali: wali[0] ? fullName(wali[0]) : "",
     kelas: selected?.name ?? "Semua kelas", from, to, table, total,
   };
 }
