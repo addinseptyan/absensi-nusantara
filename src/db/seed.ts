@@ -72,6 +72,7 @@ async function main() {
       { key: "dispensasi_counts_as_present", value: true, description: "Dispensasi dihitung hadir di persentase" },
       { key: "pkl_excluded_from_effective_days", value: true, description: "Hari PKL dikeluarkan dari hari efektif" },
       { key: "school_name", value: "SMKS Nusantara Banyuwangi", description: "Nama sekolah (kop export)" },
+      { key: "principal_name", value: "Yusuf Nugroho", description: "Nama kepala sekolah (tanda tangan di export)" },
       { key: "timezone", value: "Asia/Jakarta", description: "Zona waktu" },
       { key: "auto_alpa_after_close", value: true, description: "Tandai alpa otomatis saat hari ditutup" },
     ])

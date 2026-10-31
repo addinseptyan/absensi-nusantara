@@ -28,6 +28,8 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
   const totals = rows.reduce((a, r) => ({ present: a.present + r.present, effective: a.effective + r.effective, alpa: a.alpa + r.alpa, late: a.late + r.terlambat, pending: a.pending + r.pending }),
     { present: 0, effective: 0, alpa: 0, late: 0, pending: 0 });
   const avg = totals.effective ? Math.round((totals.present / totals.effective) * 1000) / 10 : null;
+  const exportQs = new URLSearchParams({ from, to, ...(kelas && { kelas: String(kelas.id) }) });
+  const exportBtn = "inline-flex h-8 items-center rounded-md border bg-white px-3 text-sm hover:bg-slate-50";
   const tone = (p: number | null) => (p === null ? "idle" : p >= 90 ? "ok" : p >= 80 ? "warn" : "bad") as "ok" | "warn" | "bad" | "idle";
 
   return (
@@ -49,6 +51,13 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
           </label>
           <Button type="submit">Tampilkan</Button>
         </form>
+        {can(user.permissions, "rekap.export") && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
+            <span className="text-sm text-slate-700">Unduh rekap ini:</span>
+            <a className={exportBtn} href={`/api/export/rekap?format=xlsx&${exportQs}`}>Excel (.xlsx)</a>
+            <a className={exportBtn} href={`/api/export/rekap?format=pdf&${exportQs}`}>PDF</a>
+          </div>
+        )}
         {can(user.permissions, "settings.rules") && (
           <form action={recomputeRange} className="mt-3 flex items-center gap-3 border-t border-white/60 pt-3">
             <input type="hidden" name="from" value={from} /><input type="hidden" name="to" value={to} />
