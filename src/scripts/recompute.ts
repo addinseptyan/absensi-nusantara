@@ -15,6 +15,8 @@ async function main() {
   const r = await recompute(from, to);
   console.log(`\nSelesai: ${r.rows} baris. Sync sukses terakhir: ${r.syncedAt ? r.syncedAt.toISOString() : "BELUM ADA (semua hari jadi belum_ada_data)"}`);
   console.table(r.byStatus);
+  console.log("Per jenis (student = siswa, staff = guru/pegawai):");
+  console.table(r.byType);
   if (r.studentsWithoutClass.length) console.log(`Siswa tanpa kelas (dilewati): ${r.studentsWithoutClass.join(", ")}`);
   if (r.lockedDays) console.log(`${r.lockedDays} hari dilewati karena periodenya dikunci.`);
   if (r.noScanDates.length) {

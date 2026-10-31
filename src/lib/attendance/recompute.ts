@@ -12,7 +12,7 @@ const CHUNK = 500;
 export async function recompute(from: string, to: string) {
   const today = localParts(new Date()).date;
   const end = to > today ? today : to;
-  const summary = { rows: 0, byStatus: {} as Record<string, number>, noScanDates: [] as string[], lockedDays: 0, studentsWithoutClass: [] as string[], syncedAt: null as Date | null };
+  const summary = { rows: 0, byStatus: {} as Record<string, number>, byType: {} as Record<string, Record<string, number>>, noScanDates: [] as string[], lockedDays: 0, studentsWithoutClass: [] as string[], syncedAt: null as Date | null };
   if (from > end) return summary;
 
   const [periods, ruleDays, calendar, leaves, pkls, workDayRows, locks, people, enrollments, [{ synced }]] = await Promise.all([
@@ -51,6 +51,8 @@ export async function recompute(from: string, to: string) {
   const workDays = new Map<number, Set<number>>();
   for (const w of workDayRows) workDays.set(w.staffId, (workDays.get(w.staffId) ?? new Set()).add(w.weekday));
 
+  // Tanggal yang sudah ditandai libur untuk seluruh sekolah tidak perlu dilaporkan lagi sebagai "kemungkinan libur"
+  const schoolOff = new Set(calendar.filter((c) => c.scopeType === "school" && c.kind === "non_effective" && c.audience !== "staff").map((c) => c.date));
   const dates = eachDate(from, end);
   const scanCountByDate = new Map<string, number>();
   const rows: (typeof s.attendanceDaily.$inferInsert)[] = [];
@@ -82,6 +84,8 @@ export async function recompute(from: string, to: string) {
       });
       rows.push({ personId: p.id, date, ...r, isManual: false, rulePeriodId: rule?.periodId ?? null, computedAt: new Date() });
       summary.byStatus[r.status] = (summary.byStatus[r.status] ?? 0) + 1;
+      const bt = (summary.byType[type] ??= {});
+      bt[r.status] = (bt[r.status] ?? 0) + 1;
     }
   }
 
@@ -98,7 +102,7 @@ export async function recompute(from: string, to: string) {
   summary.rows = rows.length;
 
   // Hari kerja biasa (Sen-Sab) tanpa satu pun scan dari siapa pun: kemungkinan libur belum dimasukkan ke kalender
-  summary.noScanDates = dates.filter((d) => isoWeekday(d) !== 7 && !scanCountByDate.get(d) && !lockedDates.has(d)
+  summary.noScanDates = dates.filter((d) => isoWeekday(d) !== 7 && !scanCountByDate.get(d) && !lockedDates.has(d) && !schoolOff.has(d)
     && d <= (syncedAt ? localParts(syncedAt).date : end));
   return summary;
 }

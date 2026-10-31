@@ -17,7 +17,11 @@
       "test:rules": "tsx --test src/lib/attendance/engine.test.ts",
       "recompute": "tsx src/scripts/recompute.ts",
       "calendar": "tsx src/scripts/calendar.ts",
-      "workdays": "tsx src/scripts/workdays.ts"
+      "workdays": "tsx src/scripts/workdays.ts",
+      "analyze": "tsx src/scripts/analyze.ts",
+      "wali": "tsx src/scripts/wali.ts",
+      "pkl": "tsx src/scripts/pkl.ts",
+      "staff-days": "tsx src/scripts/staff-days.ts"
    },
    "dependencies": {
       "@base-ui/react": "^1.9.0",
