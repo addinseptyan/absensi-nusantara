@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { Input } from "@/components/ui/input";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -40,7 +40,7 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
             </select>
           </label>
           {q.semua && <input type="hidden" name="semua" value="1" />}
-          <Button type="submit">Tampilkan</Button>
+          <SubmitButton type="submit">Tampilkan</SubmitButton>
           <Link className="text-sm text-teal-800 underline" href={`/koreksi?${base}${q.semua ? "" : "&semua=1"}`}>{q.semua ? "Hanya yang perlu dicek" : "Tampilkan semua siswa"}</Link>
         </form>
       </GlassCard>
@@ -61,12 +61,12 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
                   {r.note && <p className="mt-0.5 text-xs text-slate-500">{r.note}</p>}
                 </div>
                 {editable ? (
-                  <form action={correct} className="flex flex-1 flex-wrap gap-2">
+                  <ActionForm action={correct} className="flex flex-1 flex-wrap gap-2" reset>
                     <input type="hidden" name="personId" value={r.personId} /><input type="hidden" name="date" value={date} />
                     <select name="status" defaultValue="hadir" className="h-9 rounded-md border bg-white px-2 text-sm">{OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
                     <Input name="note" placeholder="Keterangan (wajib)" className="min-w-40 flex-1" maxLength={300} />
-                    <Button size="sm" variant="outline">Simpan</Button>
-                  </form>
+                    <SubmitButton type="submit" size="sm" variant="outline">Simpan</SubmitButton>
+                  </ActionForm>
                 ) : <p className="text-xs text-slate-500">Hari libur atau PKL, tidak perlu dikoreksi.</p>}
               </li>
             );

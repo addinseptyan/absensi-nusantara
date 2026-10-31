@@ -1,4 +1,5 @@
 "use server";
+import { guard } from "@/lib/action";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -15,7 +16,7 @@ const Period = z.object({
   onTimeGraceMin: z.coerce.number().int().min(0).max(120), checkOutEarlyMin: z.coerce.number().int().min(0).max(240), minGapBetweenScansMin: z.coerce.number().int().min(0).max(240),
 });
 
-export async function savePeriod(form: FormData) {
+async function savePeriod_impl(form: FormData): Promise<string> {
   const user = await requirePermission("settings.rules");
   const { id, ...p } = Period.parse(Object.fromEntries(form));
   if (p.startDate && p.endDate && p.startDate > p.endDate) throw new Error("Tanggal selesai harus setelah tanggal mulai.");
@@ -29,9 +30,14 @@ export async function savePeriod(form: FormData) {
   }
   await audit(user.id, "rules.update", "rule_periods", String(id), p);
   revalidatePath("/aturan");
+  return "Aturan jam disimpan. Tekan Hitung ulang di halaman Rekap agar berlaku pada rekap yang sudah ada.";
 }
 
-export async function addPeriod(form: FormData) {
+export async function savePeriod(form: FormData) {
+  return guard(() => savePeriod_impl(form));
+}
+
+async function addPeriod_impl(form: FormData): Promise<string> {
   const user = await requirePermission("settings.rules");
   const f = z.object({ name: z.string().trim().min(2).max(60), copyFrom: z.coerce.number().int(), startDate: z.string().date(), endDate: z.string().date() }).parse(Object.fromEntries(form));
   if (f.startDate > f.endDate) throw new Error("Tanggal selesai harus setelah tanggal mulai.");
@@ -42,14 +48,26 @@ export async function addPeriod(form: FormData) {
   await db.insert(s.rulePeriodDays).values(days.map(({ id: _d, ...d }) => ({ ...d, rulePeriodId: np.id })));
   await audit(user.id, "rules.create", "rule_periods", String(np.id), f);
   revalidatePath("/aturan");
+  return "Periode ditambahkan. Atur jam masuk dan pulangnya di kartu periode baru.";
 }
 
-export async function deletePeriod(form: FormData) {
+export async function addPeriod(form: FormData) {
+  return guard(() => addPeriod_impl(form));
+}
+
+async function deletePeriod_impl(form: FormData): Promise<string> {
   const user = await requirePermission("settings.rules");
   const id = Number(form.get("id"));
   const [p] = await db.select().from(s.rulePeriods).where(eq(s.rulePeriods.id, id));
   if (!p?.startDate && !p?.endDate) throw new Error("Aturan dasar (tanpa tanggal) tidak bisa dihapus.");
+  // Rekap lama hanya menyimpan rujukan ke periode ini; lepaskan dulu agar database tidak menolak penghapusan
+  await db.update(s.attendanceDaily).set({ rulePeriodId: null }).where(eq(s.attendanceDaily.rulePeriodId, id));
   await db.delete(s.rulePeriods).where(eq(s.rulePeriods.id, id));
   await audit(user.id, "rules.delete", "rule_periods", String(id), { name: p.name });
   revalidatePath("/aturan");
+  return "Periode dihapus. Tekan Hitung ulang di halaman Rekap untuk tanggal yang terdampak.";
+}
+
+export async function deletePeriod(form: FormData) {
+  return guard(() => deletePeriod_impl(form));
 }

@@ -1,5 +1,5 @@
 import { asc } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
+import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { Input } from "@/components/ui/input";
 import { GlassCard } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
@@ -22,7 +22,7 @@ export default async function RulesPage() {
 
       {periods.map((p) => (
         <GlassCard key={p.id} className="p-4">
-          <form action={savePeriod} className="space-y-4">
+          <ActionForm action={savePeriod} className="space-y-4">
             <input type="hidden" name="id" value={p.id} />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1 text-sm">Nama<Input name="name" defaultValue={p.name} required /></label>
@@ -41,20 +41,20 @@ export default async function RulesPage() {
               <tbody>{DAYS.map((d, i) => { const row = days.find((x) => x.rulePeriodId === p.id && x.weekday === i + 1);
                 return <tr key={d}><td className="py-1">{d}</td><td><input type="checkbox" name={`d${i + 1}s`} defaultChecked={row?.isSchoolDay ?? false} className="size-4 accent-teal-700" /></td>
                   <td><Input type="time" name={`d${i + 1}i`} defaultValue={t(row?.checkIn ?? null)} className="w-32" /></td><td><Input type="time" name={`d${i + 1}o`} defaultValue={t(row?.checkOut ?? null)} className="w-32" /></td></tr>; })}</tbody></table>
-            <Button type="submit">Simpan {p.name}</Button>
-          </form>
-          {(p.startDate || p.endDate) && <form action={deletePeriod} className="mt-2"><input type="hidden" name="id" value={p.id} /><Button size="sm" variant="ghost">Hapus periode ini</Button></form>}
+            <SubmitButton type="submit">Simpan {p.name}</SubmitButton>
+          </ActionForm>
+          {(p.startDate || p.endDate) && <div className="mt-3"><ConfirmAction action={deletePeriod} fields={{ id: p.id }} label="Hapus periode ini" title={`Hapus periode "${p.name}"?`} description="Jam masuk dan pulang periode ini dihapus. Tanggal yang tercakup kembali memakai aturan dasar setelah rekap dihitung ulang." /></div>}
         </GlassCard>))}
 
       <GlassCard className="p-4">
         <h2 className="mb-3 font-medium">Tambah periode khusus (misalnya Ramadan)</h2>
-        <form action={addPeriod} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ActionForm action={addPeriod} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" reset>
           <label className="space-y-1 text-sm">Nama<Input name="name" placeholder="Ramadan 2027" required /></label>
           <label className="space-y-1 text-sm">Mulai<Input type="date" name="startDate" required /></label>
           <label className="space-y-1 text-sm">Selesai<Input type="date" name="endDate" required /></label>
           <label className="space-y-1 text-sm">Salin pengaturan dari<select name="copyFrom" className={sel}>{periods.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-          <div className="flex items-end"><Button type="submit" variant="outline">Tambah</Button></div>
-        </form>
+          <div className="flex items-end"><SubmitButton type="submit" variant="outline">Tambah</SubmitButton></div>
+        </ActionForm>
         <p className="mt-2 text-xs text-slate-500">Setelah ditambahkan, edit jam masuk dan pulangnya di kartu periode barunya.</p>
       </GlassCard>
     </div>

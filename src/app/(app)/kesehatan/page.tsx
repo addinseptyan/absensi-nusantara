@@ -1,5 +1,5 @@
 import { count, desc, max } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
+import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
@@ -50,7 +50,7 @@ export default async function HealthPage() {
       <GlassCard className="flex flex-wrap items-center gap-2 p-4">
         <p className="mr-2 text-sm font-medium">Perintah ke agent:</p>
         {COMMANDS.map(([type, label]) => (
-          <form key={type} action={sendCommand.bind(null, type)}><Button variant={type === "diagnose" ? "default" : "outline"} size="sm">{label}</Button></form>
+          <ActionForm key={type} action={sendCommand}><input type="hidden" name="type" value={type} /><SubmitButton variant={type === "diagnose" ? "default" : "outline"} size="sm" pendingText="Mengirim…">{label}</SubmitButton></ActionForm>
         ))}
       </GlassCard>
 

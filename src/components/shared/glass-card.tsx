@@ -7,5 +7,9 @@ export function GlassCard({ className, ...props }: React.ComponentProps<"div">) 
 
 const TONES = { ok: "bg-emerald-100 text-emerald-800", warn: "bg-amber-100 text-amber-800", bad: "bg-red-100 text-red-800", idle: "bg-slate-200 text-slate-700" };
 export function Pill({ tone, children }: { tone: keyof typeof TONES; children: React.ReactNode }) {
-  return <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", TONES[tone])}>{children}</span>;
+  return (
+    <span className={cn("inline-flex select-none items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", TONES[tone])}>
+      <span aria-hidden className="size-1.5 rounded-full bg-current opacity-70" />{children}
+    </span>
+  );
 }

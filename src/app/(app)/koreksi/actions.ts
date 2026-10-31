@@ -1,4 +1,5 @@
 "use server";
+import { guard } from "@/lib/action";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -15,7 +16,7 @@ const Form = z.object({
   note: z.string().trim().max(300).default(""),
 });
 
-export async function correct(form: FormData) {
+async function correct_impl(form: FormData): Promise<string> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const f = Form.parse(Object.fromEntries(form));
@@ -37,4 +38,9 @@ export async function correct(form: FormData) {
     before: before ? { status: before.status, isManual: before.isManual } : null, after: { status: f.status }, reason: f.note || "Kembali ke otomatis",
   });
   revalidatePath("/koreksi");
+  return f.status === "auto" ? "Dikembalikan ke hitungan otomatis." : "Koreksi tersimpan.";
+}
+
+export async function correct(form: FormData) {
+  return guard(() => correct_impl(form));
 }

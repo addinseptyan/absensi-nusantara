@@ -1,4 +1,5 @@
 "use server";
+import { guard } from "@/lib/action";
 import { and, eq, notInArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { audit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/current-user";
 import { LOCKED_ADMIN_PERMISSIONS, type PermissionCode } from "@/lib/permissions";
 
-export async function savePermissions(form: FormData) {
+async function savePermissions_impl(form: FormData): Promise<string> {
   const admin = await requirePermission("role.manage");
   const [roles, perms] = await Promise.all([db.select().from(s.roles), db.select({ code: s.permissions.code }).from(s.permissions)]);
   for (const r of roles) {
@@ -19,9 +20,14 @@ export async function savePermissions(form: FormData) {
   }
   await audit(admin.id, "role.permissions_update", "roles", "all", Object.fromEntries(roles.map((r) => [r.slug, form.getAll(`p:${r.id}`).length])));
   revalidatePath("/hak-akses");
+  return "Hak akses disimpan. Berlaku saat pengguna membuka halaman berikutnya.";
 }
 
-export async function createRole(form: FormData) {
+export async function savePermissions(form: FormData) {
+  return guard(() => savePermissions_impl(form));
+}
+
+async function createRole_impl(form: FormData): Promise<string> {
   const admin = await requirePermission("role.manage");
   const f = z.object({ name: z.string().trim().min(2).max(50), copyFrom: z.string().optional() }).parse(Object.fromEntries(form));
   let slug = f.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "role";
@@ -34,9 +40,14 @@ export async function createRole(form: FormData) {
   }
   await audit(admin.id, "role.create", "roles", String(role.id), { name: f.name });
   revalidatePath("/hak-akses");
+  return `Role "${f.name}" ditambahkan. Centang izinnya di tabel lalu simpan.`;
 }
 
-export async function deleteRole(form: FormData) {
+export async function createRole(form: FormData) {
+  return guard(() => createRole_impl(form));
+}
+
+async function deleteRole_impl(form: FormData): Promise<string> {
   const admin = await requirePermission("role.manage");
   const id = Number(form.get("roleId"));
   const [role] = await db.select().from(s.roles).where(eq(s.roles.id, id));
@@ -46,4 +57,9 @@ export async function deleteRole(form: FormData) {
   await db.delete(s.roles).where(eq(s.roles.id, id));
   await audit(admin.id, "role.delete", "roles", String(id), { name: role.name });
   revalidatePath("/hak-akses");
+  return `Role "${role.name}" dihapus.`;
+}
+
+export async function deleteRole(form: FormData) {
+  return guard(() => deleteRole_impl(form));
 }

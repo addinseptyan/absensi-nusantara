@@ -1,5 +1,5 @@
 import { asc, eq } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
+import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { Input } from "@/components/ui/input";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
@@ -31,15 +31,15 @@ export default async function CalendarPage() {
         <p className="text-sm text-slate-600">Tandai libur, belajar di rumah, atau beri keterangan pada hari tertentu. Rekap otomatis dihitung ulang untuk rentang yang diubah.</p></div>
 
       <GlassCard className="p-4">
-        <form action={addEntries} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ActionForm action={addEntries} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" reset>
           <label className="space-y-1 text-sm">Dari<Input type="date" name="from" defaultValue={ay?.startDate} required /></label>
           <label className="space-y-1 text-sm">Sampai<Input type="date" name="to" defaultValue={ay?.startDate} required /></label>
           <label className="space-y-1 text-sm">Jenis<select name="kind" className={sel}><option value="non_effective">Tidak efektif (libur / belajar di rumah)</option><option value="effective">Hari efektif, hanya keterangan</option></select></label>
           <label className="space-y-1 text-sm">Berlaku untuk<select name="scope" className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></select></label>
           <label className="space-y-1 text-sm">Peserta<select name="audience" className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></select></label>
           <label className="space-y-1 text-sm">Keterangan<Input name="reason" placeholder="mis. Libur Natal" required maxLength={120} /></label>
-          <div className="sm:col-span-2 lg:col-span-3"><Button type="submit">Simpan ke kalender</Button></div>
-        </form>
+          <div className="sm:col-span-2 lg:col-span-3"><SubmitButton type="submit">Simpan ke kalender</SubmitButton></div>
+        </ActionForm>
       </GlassCard>
 
       <section className="rounded-2xl border bg-white">
@@ -50,9 +50,7 @@ export default async function CalendarPage() {
               <div className="flex-1"><p className="text-sm">{g.reason}</p>
                 <p className="text-xs text-slate-500">{g.scopeType === "school" ? "Seluruh sekolah" : `Kelas ${g.grade}`} · {AUD[g.audience]}</p></div>
               <Pill tone={g.kind === "non_effective" ? "warn" : "ok"}>{g.kind === "non_effective" ? "Tidak efektif" : "Keterangan"}</Pill>
-              <form action={deleteEntries}>
-                {(["from", "to", "reason", "scopeType", "grade", "audience"] as const).map((k) => <input key={k} type="hidden" name={k} value={g[k]} />)}
-                <Button size="sm" variant="ghost">Hapus</Button></form>
+              <ConfirmAction action={deleteEntries} fields={{ from: g.from, to: g.to, reason: g.reason, scopeType: g.scopeType, grade: g.grade, audience: g.audience }} label="Hapus" title="Hapus entri kalender?" description={`Entri "${g.reason}" akan dihapus dari kalender dan rekap pada tanggal itu dihitung ulang.`} />
             </li>))}</ul>)}
       </section>
     </div>

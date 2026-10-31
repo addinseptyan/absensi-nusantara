@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { Input } from "@/components/ui/input";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -49,7 +49,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
               {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
-          <Button type="submit">Tampilkan</Button>
+          <SubmitButton type="submit">Tampilkan</SubmitButton>
         </form>
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
@@ -59,11 +59,11 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
           </div>
         )}
         {can(user.permissions, "settings.rules") && (
-          <form action={recomputeRange} className="mt-3 flex items-center gap-3 border-t border-white/60 pt-3">
+          <ActionForm confirm={{ title: "Hitung ulang rekap?", description: "Seluruh rekap pada rentang ini dihitung ulang dari data scan. Koreksi manual tidak berubah.", label: "Ya, hitung ulang" }} action={recomputeRange} className="mt-3 flex items-center gap-3 border-t border-white/60 pt-3">
             <input type="hidden" name="from" value={from} /><input type="hidden" name="to" value={to} />
-            <Button type="submit" variant="outline" size="sm">Hitung ulang rentang ini</Button>
+            <SubmitButton type="submit" variant="outline" size="sm">Hitung ulang rentang ini</SubmitButton>
             <span className="text-xs text-slate-500">Pakai setelah mengubah aturan atau kalender. Maksimal 62 hari.</span>
-          </form>
+          </ActionForm>
         )}
       </GlassCard>
 
