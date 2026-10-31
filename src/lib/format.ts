@@ -12,3 +12,7 @@ export const fmtTime = (d: Date | string | null) =>
 
 export const STATUS_LABEL = { hadir: "Hadir", terlambat: "Terlambat", izin: "Izin", sakit: "Sakit", dispensasi: "Dispensasi", pkl: "PKL", alpa: "Alpa", libur: "Libur", belum_ada_data: "Belum ada data" } as const;
 export const STATUS_TONE = { hadir: "ok", terlambat: "warn", izin: "idle", sakit: "idle", dispensasi: "ok", pkl: "idle", alpa: "bad", libur: "idle", belum_ada_data: "warn" } as const;
+
+const UTC = { timeZone: "UTC" } as const;
+export const fmtDay = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("id-ID", { ...UTC, weekday: "long", day: "numeric", month: "short" });
+export const fmtShort = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("id-ID", { ...UTC, day: "numeric", month: "short" });

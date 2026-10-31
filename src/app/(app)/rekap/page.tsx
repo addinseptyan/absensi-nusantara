@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +78,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
                 <th className="px-3 text-right font-medium">Kehadiran</th></tr></thead>
               <tbody>{rows.map((r) => (
                 <tr key={r.personId} className="border-b last:border-0 hover:bg-slate-50">
-                  <td className="px-3 py-2">{r.name}</td><td className="px-2 text-slate-600">{r.className}</td>
+                  <td className="px-3 py-2"><Link className="text-teal-800 hover:underline" href={`/rekap/${r.personId}?from=${from}&to=${to}`}>{r.name}</Link></td><td className="px-2 text-slate-600">{r.className}</td>
                   <td className={NUM}>{r.effective}</td><td className={NUM}>{r.hadir + r.terlambat}</td><td className={NUM}>{r.terlambat}</td>
                   <td className={NUM}>{r.izin}</td><td className={NUM}>{r.sakit}</td><td className={NUM}>{r.dispensasi}</td><td className={NUM}>{r.pkl}</td>
                   <td className={`${NUM} ${r.alpa ? "font-medium text-red-700" : ""}`}>{r.alpa}</td>
