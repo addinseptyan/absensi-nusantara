@@ -416,3 +416,12 @@ export const auditLogs = pgTable(
   },
   (t) => [index().on(t.createdAt), index().on(t.entity, t.entityId)],
 );
+
+// Pembatas percobaan login. Kuncinya teks yang diketik (username/email), termasuk yang tidak ada,
+// agar pesan yang tampil sama dan tidak membocorkan akun mana yang benar-benar ada.
+export const loginThrottle = pgTable("login_throttle", {
+  key: text().primaryKey(),
+  failures: integer().notNull().default(0),
+  lockedUntil: timestamp({ withTimezone: true }),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});

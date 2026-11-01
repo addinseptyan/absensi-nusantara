@@ -9,7 +9,7 @@ import { readSession } from "./session";
 export const getCurrentUser = cache(async () => {
   const uid = await readSession();
   if (!uid) return null;
-  const [u] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email, personId: s.users.personId, username: s.users.username, isActive: s.users.isActive })
+  const [u] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email, personId: s.users.personId, username: s.users.username, mustChangePassword: s.users.mustChangePassword, isActive: s.users.isActive })
     .from(s.users).where(eq(s.users.id, uid));
   if (!u?.isActive) return null;
   const rows = await db.selectDistinct({ code: s.rolePermissions.permissionCode })
@@ -25,6 +25,7 @@ export const getCurrentUser = cache(async () => {
 export async function requirePermission(code: PermissionCode) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.mustChangePassword) throw new Error("Ganti kata sandi Anda dulu di halaman Akun saya.");
   if (!can(user.permissions, code)) throw new Error("Anda tidak punya izin untuk tindakan ini.");
   return user;
 }
