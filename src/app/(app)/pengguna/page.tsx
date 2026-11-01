@@ -5,21 +5,25 @@ import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { fmtWib } from "@/lib/format";
-import { createUser, deleteUser, setPassword, setUsername, toggleActive } from "./actions";
+import { fullName } from "@/lib/person";
+import { Modal } from "@/components/shared/modal";
+import { createUser, deleteUser, setPassword, toggleActive, updateUser } from "./actions";
 
 export default async function UsersPage() {
   const me = await requirePermission("user.manage");
-  const [users, roles, staff] = await Promise.all([
+  const [users, roles, staff, userRoles] = await Promise.all([
     db.select({
-      id: s.users.id, name: s.users.name, username: s.users.username, email: s.users.email, isActive: s.users.isActive, lastLoginAt: s.users.lastLoginAt, person: s.people.name,
+      id: s.users.id, name: s.users.name, username: s.users.username, email: s.users.email, personId: s.users.personId, isActive: s.users.isActive, lastLoginAt: s.users.lastLoginAt, person: s.people.name,
       roles: sql<string>`coalesce(string_agg(${s.roles.name}, ', '), '')`,
     }).from(s.users)
       .leftJoin(s.userRoles, eq(s.userRoles.userId, s.users.id)).leftJoin(s.roles, eq(s.roles.id, s.userRoles.roleId))
       .leftJoin(s.people, eq(s.people.id, s.users.personId)).groupBy(s.users.id, s.people.name).orderBy(asc(s.users.name)),
     db.select().from(s.roles).orderBy(asc(s.roles.name)),
-    db.select({ id: s.people.id, name: s.people.name }).from(s.people).leftJoin(s.users, eq(s.users.personId, s.people.id))
-      .where(sql`${s.people.type} = 'staff' and ${s.people.status} = 'active' and ${isNull(s.users.id)}`).orderBy(asc(s.people.name)),
+    db.select({ id: s.people.id, name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix, userId: s.users.id }).from(s.people).leftJoin(s.users, eq(s.users.personId, s.people.id))
+      .where(sql`${s.people.type} = 'staff' and ${s.people.status} = 'active'`).orderBy(asc(s.people.name)),
+    db.select().from(s.userRoles),
   ]);
+  const roleIdsOf = (id: number) => new Set(userRoles.filter((x) => x.userId === id).map((x) => x.roleId));
   const sel = "h-9 rounded-md border bg-white px-2 text-sm";
 
   return (
@@ -35,7 +39,7 @@ export default async function UsersPage() {
           <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" /></label>
           <label className="space-y-1 text-sm">Kata sandi sementara<Input name="password" type="text" minLength={8} required /></label>
           <label className="space-y-1 text-sm">Role<select name="roleId" className={`${sel} block w-full`} required>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
-          <label className="space-y-1 text-sm">Data guru (opsional)<select name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+          <label className="space-y-1 text-sm">Data guru (opsional)<select name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.filter((p) => !p.userId).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</select></label>
           <div className="flex items-end"><SubmitButton type="submit">Buat akun</SubmitButton></div>
         </ActionForm>
       </GlassCard>
@@ -48,7 +52,7 @@ export default async function UsersPage() {
             <div className="lg:w-56"><Pill tone={u.isActive ? "ok" : "idle"}>{u.isActive ? "Aktif" : "Nonaktif"}</Pill> <span className="text-xs text-slate-600">{u.roles || "tanpa role"}</span>
               <p className="text-xs text-slate-500">Login terakhir {fmtWib(u.lastLoginAt)}</p></div>
             <div className="flex flex-1 flex-wrap items-center gap-2">
-              <ActionForm action={setUsername} className="flex gap-2"><input type="hidden" name="userId" value={u.id} /><Input name="username" defaultValue={u.username ?? ""} placeholder="Username" className="w-36" required minLength={3} maxLength={30} autoCapitalize="none" /><SubmitButton size="sm" variant="outline">Simpan username</SubmitButton></ActionForm>
+              <EditUser u={u} roles={roles} roleIds={roleIdsOf(u.id)} staff={staff} sel={`${sel} block w-full`} />
               <ActionForm action={setPassword} className="flex gap-2" reset><input type="hidden" name="userId" value={u.id} />
                 <Input name="password" placeholder="Sandi baru (min. 8)" minLength={8} required className="w-44" /><SubmitButton type="submit" size="sm" variant="outline">Ganti sandi</SubmitButton></ActionForm>
               {u.id !== me.id && (<>
@@ -62,5 +66,29 @@ export default async function UsersPage() {
           </li>))}</ul>
       </section>
     </div>
+  );
+}
+
+type Staff = { id: number; name: string; titlePrefix: string | null; titleSuffix: string | null; userId: number | null };
+function EditUser({ u, roles, roleIds, staff, sel }: {
+  u: { id: number; name: string; username: string | null; email: string | null; personId: number | null };
+  roles: { id: number; name: string }[]; roleIds: Set<number>; staff: Staff[]; sel: string;
+}) {
+  return (
+    <Modal label="Ubah" title={`Ubah akun ${u.name}`}>
+      <ActionForm action={updateUser} className="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="userId" value={u.id} />
+        <label className="space-y-1 text-sm sm:col-span-2">Nama tampilan<Input name="name" defaultValue={u.name} required minLength={2} maxLength={100} /></label>
+        <label className="space-y-1 text-sm">Username<Input name="username" defaultValue={u.username ?? ""} required minLength={3} maxLength={30} autoCapitalize="none" /></label>
+        <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" defaultValue={u.email ?? ""} /></label>
+        <label className="space-y-1 text-sm sm:col-span-2">Data guru (opsional)
+          <select name="personId" defaultValue={u.personId ?? ""} className={sel}><option value="">Tidak dihubungkan</option>
+            {staff.filter((p) => !p.userId || p.userId === u.id).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</select></label>
+        <fieldset className="sm:col-span-2"><legend className="mb-2 text-sm">Role (boleh lebih dari satu)</legend>
+          <div className="flex flex-wrap gap-2">{roles.map((r) => (
+            <label key={r.id} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm"><input type="checkbox" name="roleId" value={r.id} defaultChecked={roleIds.has(r.id)} className="size-4 accent-teal-700" />{r.name}</label>))}</div></fieldset>
+        <div className="sm:col-span-2"><SubmitButton>Simpan perubahan</SubmitButton></div>
+      </ActionForm>
+    </Modal>
   );
 }

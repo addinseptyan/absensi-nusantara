@@ -1,7 +1,7 @@
 "use server";
 import { guard } from "@/lib/action";
 import bcrypt from "bcryptjs";
-import { eq, or, sql } from "drizzle-orm";
+import { and, eq, ne, notInArray, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, schema as s } from "@/db";
@@ -84,16 +84,39 @@ export async function deleteUser(form: FormData) {
   });
 }
 
-export async function setUsername(form: FormData) {
+export async function updateUser(form: FormData) {
   return guard(async () => {
     const admin = await requirePermission("user.manage");
-    const f = z.object({ userId: z.coerce.number().int(), username: z.string().trim().regex(/^[A-Za-z0-9._-]{3,30}$/, "Username 3-30 karakter: huruf, angka, titik, garis bawah, atau strip.") }).parse(Object.fromEntries(form));
-    const username = f.username.toLowerCase();
-    const [dup] = await db.select({ id: s.users.id }).from(s.users).where(eq(sql`lower(${s.users.username})`, username));
-    if (dup && dup.id !== f.userId) throw new Error("Username itu sudah dipakai akun lain.");
-    await db.update(s.users).set({ username }).where(eq(s.users.id, f.userId));
-    await audit(admin.id, "user.username_set", "users", String(f.userId), { username });
+    const f = z.object({
+      userId: z.coerce.number().int(),
+      name: z.string().trim().min(2, "Nama minimal 2 huruf.").max(100),
+      username: z.string().trim().regex(/^[A-Za-z0-9._-]{3,30}$/, "Username 3-30 karakter: huruf, angka, titik, garis bawah, atau strip."),
+      email: z.string().trim().email("Format email tidak valid.").optional().or(z.literal("")),
+      personId: z.string().optional(),
+    }).parse(Object.fromEntries(form));
+    const roleIds = [...new Set(form.getAll("roleId").map(Number).filter(Boolean))];
+    if (!roleIds.length) throw new Error("Pilih minimal satu role.");
+    const username = f.username.toLowerCase(), email = f.email ? f.email.toLowerCase() : null;
+
+    const taken = await db.select({ id: s.users.id }).from(s.users)
+      .where(and(ne(s.users.id, f.userId), or(eq(sql`lower(${s.users.username})`, username), email ? eq(sql`lower(${s.users.email})`, email) : undefined)));
+    if (taken.length) throw new Error("Username atau email itu sudah dipakai akun lain.");
+
+    // Selalu harus tersisa minimal satu admin aktif
+    const [adminRole] = await db.select().from(s.roles).where(eq(s.roles.slug, "admin"));
+    if (adminRole && !roleIds.includes(adminRole.id)) {
+      const [wasAdmin] = await db.select().from(s.userRoles).where(and(eq(s.userRoles.userId, f.userId), eq(s.userRoles.roleId, adminRole.id)));
+      const others = await db.select({ id: s.users.id }).from(s.userRoles).innerJoin(s.users, eq(s.users.id, s.userRoles.userId))
+        .where(and(eq(s.userRoles.roleId, adminRole.id), eq(s.users.isActive, true), ne(s.users.id, f.userId)));
+      if (wasAdmin && !others.length) throw new Error("Harus ada minimal satu admin aktif. Jadikan orang lain admin terlebih dulu.");
+    }
+    await db.batch([
+      db.update(s.users).set({ name: f.name, username, email, personId: f.personId ? Number(f.personId) : null }).where(eq(s.users.id, f.userId)),
+      db.insert(s.userRoles).values(roleIds.map((roleId) => ({ userId: f.userId, roleId }))).onConflictDoNothing(),
+      db.delete(s.userRoles).where(and(eq(s.userRoles.userId, f.userId), notInArray(s.userRoles.roleId, roleIds))),
+    ]);
+    await audit(admin.id, "user.update", "users", String(f.userId), { name: f.name, username, roleIds });
     revalidatePath("/pengguna");
-    return `Username diubah menjadi "${username}".`;
+    return `Data ${f.name} diperbarui.`;
   });
 }

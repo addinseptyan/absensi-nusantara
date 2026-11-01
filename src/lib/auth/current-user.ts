@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db, schema as s } from "@/db";
 import { can, type PermissionCode } from "@/lib/permissions";
 import { readSession } from "./session";
@@ -16,7 +16,9 @@ export const getCurrentUser = cache(async () => {
     .from(s.userRoles)
     .innerJoin(s.rolePermissions, eq(s.rolePermissions.roleId, s.userRoles.roleId))
     .where(eq(s.userRoles.userId, uid));
-  return { ...u, permissions: rows.map((r) => r.code) };
+  const roleRows = await db.select({ name: s.roles.name }).from(s.userRoles)
+    .innerJoin(s.roles, eq(s.roles.id, s.userRoles.roleId)).where(eq(s.userRoles.userId, uid)).orderBy(asc(s.roles.id));
+  return { ...u, roles: roleRows.map((r) => r.name), permissions: rows.map((r) => r.code) };
 });
 
 /** Dipakai di halaman dan server action: wajib login DAN punya izin (dicek di server). */

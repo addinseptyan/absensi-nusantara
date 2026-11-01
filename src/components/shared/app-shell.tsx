@@ -11,6 +11,8 @@ const ICONS: Record<string, typeof Activity> = {
   "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
 };
 
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -19,7 +21,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const links = items.map(({ href, label }) => { const Icon = ICONS[href]; return <NavLink key={href} href={href} label={label} icon={<Icon className="size-4" />} />; });
   const account = (
     <form action={logout} className="mt-2 space-y-2 border-t border-slate-200/70 pt-3">
-      <div className="px-1"><p className="truncate text-sm font-medium text-slate-800">{user.name}</p><p className="truncate text-xs text-slate-500">{user.username ?? user.email}</p></div>
+      <div className="flex items-center gap-3 px-1" title={user.username ? `@${user.username}` : undefined}>
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">{initials(user.name)}</span>
+        <div className="min-w-0"><p className="truncate text-sm font-medium text-slate-800">{user.name}</p><p className="truncate text-xs text-slate-500">{user.roles.join(", ") || "Tanpa role"}</p></div>
+      </div>
       <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100">
         <LogOut className="size-4" /> Keluar
       </button>
