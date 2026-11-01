@@ -9,7 +9,7 @@ const ex = (col: string) => sql.raw(`excluded."${col}"`);
 const CHUNK = 500;
 
 /** Hitung ulang attendance_daily untuk rentang tanggal (maksimal sampai hari ini). Aman dijalankan berulang. */
-export async function recompute(from: string, to: string) {
+export async function recompute(from: string, to: string, opts: { personIds?: number[] } = {}) {
   const today = localParts(new Date()).date;
   const end = to > today ? today : to;
   const summary = { rows: 0, byStatus: {} as Record<string, number>, byType: {} as Record<string, Record<string, number>>, noScanDates: [] as string[], lockedDays: 0, studentsWithoutClass: [] as string[], syncedAt: null as Date | null };
@@ -58,6 +58,7 @@ export async function recompute(from: string, to: string) {
   const rows: (typeof s.attendanceDaily.$inferInsert)[] = [];
 
   for (const p of people) {
+    if (opts.personIds && !opts.personIds.includes(p.id)) continue; // mis. koreksi satu siswa
     const type: PersonType = p.type;
     const enr = classOf.get(p.id);
     if (type === "student" && !enr) { summary.studentsWithoutClass.push(p.name); continue; }

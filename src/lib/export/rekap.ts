@@ -57,7 +57,7 @@ export async function buildXlsx(d: RekapData) {
   });
   [5, 30, 11, 12, 9, 11, 7, 7, 12, 7, 7, 12].forEach((w, i) => (ws.getColumn(i + 1).width = w));
   const r = ws.rowCount + 3;
-  ws.getCell(r, 2).value = `Banyuwangi, ${fmtLong(new Date())}`;
+  ws.getCell(r, 9).value = `Banyuwangi, ${fmtLong(new Date())}`; // di atas Kepala Sekolah
   ws.getCell(r + 1, 2).value = "Wali Kelas"; ws.getCell(r + 1, 9).value = "Kepala Sekolah";
   ws.getCell(r + 5, 2).value = d.wali || "(.....................)"; ws.getCell(r + 5, 9).value = d.principal || "(.....................)";
   return { body: new Uint8Array(await wb.xlsx.writeBuffer()), type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ext: "xlsx" };
@@ -75,10 +75,12 @@ export async function buildPdf(d: RekapData) {
     styles: { fontSize: 8, cellPadding: 1.5 }, headStyles: { fillColor: [15, 118, 110] }, footStyles: { fillColor: [226, 232, 240], textColor: 20, fontStyle: "bold" },
     columnStyles: Object.fromEntries(HEAD.map((_, i) => [i, { halign: i === 1 || i === 2 ? "left" : "center" }])),
     showFoot: "lastPage",
+    // Rata tengah untuk semua bagian (judul, isi, total) agar baris total sejajar dengan kolomnya
+    didParseCell: (d) => { d.cell.styles.halign = d.column.index === 1 || d.column.index === 2 ? "left" : "center"; },
   });
   let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   if (y > doc.internal.pageSize.getHeight() - 45) { doc.addPage(); y = 20; }
-  doc.text(`Banyuwangi, ${fmtLong(new Date())}`, w - 25, y, { align: "right" });
+  doc.text(`Banyuwangi, ${fmtLong(new Date())}`, w - 50, y, { align: "center" });
   doc.text("Wali Kelas", 40, y + 6, { align: "center" }); doc.text("Kepala Sekolah", w - 50, y + 6, { align: "center" });
   doc.text(d.wali || "(.....................)", 40, y + 28, { align: "center" }); doc.text(d.principal || "(.....................)", w - 50, y + 28, { align: "center" });
   return { body: new Uint8Array(doc.output("arraybuffer")), type: "application/pdf", ext: "pdf" };

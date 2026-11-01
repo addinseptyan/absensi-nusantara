@@ -2,28 +2,21 @@ import { redirect } from "next/navigation";
 import { Activity, CalendarDays, Check, ClipboardCheck, Clock, GraduationCap, LayoutDashboard, LogOut, ShieldCheck, Users } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { can, type PermissionCode } from "@/lib/permissions";
+import { allowedNav } from "@/lib/nav";
 import { GlassCard } from "./glass-card";
 import { MobileMenu, NavLink } from "./nav";
 
-// Menu baru = tambah satu baris di sini. Menu otomatis disembunyikan jika izinnya tidak ada.
-const NAV: { href: string; label: string; icon: typeof Activity; perm: PermissionCode | PermissionCode[] }[] = [
-  { href: "/rekap", label: "Rekap kehadiran", icon: LayoutDashboard, perm: ["rekap.view_all", "rekap.view_own_class"] },
-  { href: "/koreksi", label: "Koreksi kehadiran", icon: ClipboardCheck, perm: ["attendance.correct", "leave.create_own_class"] },
-  { href: "/data", label: "Data siswa & guru", icon: GraduationCap, perm: ["student.manage", "staff.manage"] },
-  { href: "/kalender", label: "Kalender", icon: CalendarDays, perm: "calendar.manage" },
-  { href: "/aturan", label: "Aturan jam", icon: Clock, perm: "settings.rules" },
-  { href: "/pengguna", label: "Pengguna", icon: Users, perm: "user.manage" },
-  { href: "/hak-akses", label: "Hak akses", icon: ShieldCheck, perm: "role.manage" },
-  { href: "/kesehatan", label: "Kesehatan sistem", icon: Activity, perm: "system.health" },
-];
+const ICONS: Record<string, typeof Activity> = {
+  "/rekap": LayoutDashboard, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kalender": CalendarDays,
+  "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
+};
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const items = NAV.filter((n) => [n.perm].flat().some((p) => can(user.permissions, p)));
+  const items = allowedNav(user.permissions);
 
-  const links = items.map(({ href, label, icon: Icon }) => <NavLink key={href} href={href} label={label} icon={<Icon className="size-4" />} />);
+  const links = items.map(({ href, label }) => { const Icon = ICONS[href]; return <NavLink key={href} href={href} label={label} icon={<Icon className="size-4" />} />; });
   const account = (
     <form action={logout} className="mt-2 space-y-2 border-t border-slate-200/70 pt-3">
       <div className="px-1"><p className="truncate text-sm font-medium text-slate-800">{user.name}</p><p className="truncate text-xs text-slate-500">{user.email}</p></div>
