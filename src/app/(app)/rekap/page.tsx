@@ -29,7 +29,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
     { present: 0, effective: 0, alpa: 0, late: 0, pending: 0 });
   const avg = totals.effective ? Math.round((totals.present / totals.effective) * 1000) / 10 : null;
   const exportQs = new URLSearchParams({ from, to, ...(kelas && { kelas: String(kelas.id) }) });
-  const exportBtn = "inline-flex h-8 items-center rounded-md border bg-white px-3 text-sm hover:bg-slate-50";
+  const exportBtn = "inline-flex h-8 items-center rounded-[var(--radius-control)] border bg-white px-3 text-sm hover:bg-slate-50";
   const tone = (p: number | null) => (p === null ? "idle" : p >= 90 ? "ok" : p >= 80 ? "warn" : "bad") as "ok" | "warn" | "bad" | "idle";
 
   return (

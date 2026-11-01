@@ -126,7 +126,8 @@ export const staffWorkDays = pgTable(
 export const users = pgTable("users", {
   id: id(),
   personId: integer().references(() => people.id),
-  email: text().notNull().unique(),
+  username: text().unique(), // untuk login; alternatif email
+  email: text().unique(), // opsional
   name: text().notNull(),
   passwordHash: text().notNull(),
   isActive: boolean().notNull().default(true),

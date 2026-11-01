@@ -10,7 +10,7 @@ import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
 
 const STATUS = { active: "Aktif", graduated: "Lulus", moved: "Pindah", inactive: "Nonaktif" } as const;
-const btn = "inline-flex h-9 items-center rounded-md px-3 text-sm font-medium shadow-sm";
+const btn = "inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium shadow-sm";
 const sel = "h-9 rounded-md border bg-white px-2 text-sm";
 
 export default async function DataPage({ searchParams }: { searchParams: Promise<{ jenis?: string; q?: string; kelas?: string; status?: string }> }) {

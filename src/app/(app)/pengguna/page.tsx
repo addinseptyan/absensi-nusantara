@@ -5,13 +5,13 @@ import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { fmtWib } from "@/lib/format";
-import { createUser, deleteUser, setPassword, toggleActive } from "./actions";
+import { createUser, deleteUser, setPassword, setUsername, toggleActive } from "./actions";
 
 export default async function UsersPage() {
   const me = await requirePermission("user.manage");
   const [users, roles, staff] = await Promise.all([
     db.select({
-      id: s.users.id, name: s.users.name, email: s.users.email, isActive: s.users.isActive, lastLoginAt: s.users.lastLoginAt, person: s.people.name,
+      id: s.users.id, name: s.users.name, username: s.users.username, email: s.users.email, isActive: s.users.isActive, lastLoginAt: s.users.lastLoginAt, person: s.people.name,
       roles: sql<string>`coalesce(string_agg(${s.roles.name}, ', '), '')`,
     }).from(s.users)
       .leftJoin(s.userRoles, eq(s.userRoles.userId, s.users.id)).leftJoin(s.roles, eq(s.roles.id, s.userRoles.roleId))
@@ -31,7 +31,8 @@ export default async function UsersPage() {
         <h2 className="mb-3 font-medium">Tambah pengguna</h2>
         <ActionForm action={createUser} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" reset>
           <label className="space-y-1 text-sm">Nama<Input name="name" required /></label>
-          <label className="space-y-1 text-sm">Email<Input name="email" type="email" required /></label>
+          <label className="space-y-1 text-sm">Username<Input name="username" required minLength={3} maxLength={30} autoCapitalize="none" /></label>
+          <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" /></label>
           <label className="space-y-1 text-sm">Kata sandi sementara<Input name="password" type="text" minLength={8} required /></label>
           <label className="space-y-1 text-sm">Role<select name="roleId" className={`${sel} block w-full`} required>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
           <label className="space-y-1 text-sm">Data guru (opsional)<select name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
@@ -43,10 +44,11 @@ export default async function UsersPage() {
         <ul className="divide-y">{users.map((u) => (
           <li key={u.id} className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center">
             <div className="lg:w-72"><p className="text-sm font-medium">{u.name} {u.id === me.id && <span className="text-xs text-slate-500">(Anda)</span>}</p>
-              <p className="text-xs text-slate-500">{u.email}{u.person ? ` · guru: ${u.person}` : ""}</p></div>
+              <p className="text-xs text-slate-500">{u.username ? `@${u.username}` : "belum ada username"}{u.email ? ` · ${u.email}` : ""}{u.person ? ` · guru: ${u.person}` : ""}</p></div>
             <div className="lg:w-56"><Pill tone={u.isActive ? "ok" : "idle"}>{u.isActive ? "Aktif" : "Nonaktif"}</Pill> <span className="text-xs text-slate-600">{u.roles || "tanpa role"}</span>
               <p className="text-xs text-slate-500">Login terakhir {fmtWib(u.lastLoginAt)}</p></div>
             <div className="flex flex-1 flex-wrap items-center gap-2">
+              <ActionForm action={setUsername} className="flex gap-2"><input type="hidden" name="userId" value={u.id} /><Input name="username" defaultValue={u.username ?? ""} placeholder="Username" className="w-36" required minLength={3} maxLength={30} autoCapitalize="none" /><SubmitButton size="sm" variant="outline">Simpan username</SubmitButton></ActionForm>
               <ActionForm action={setPassword} className="flex gap-2" reset><input type="hidden" name="userId" value={u.id} />
                 <Input name="password" placeholder="Sandi baru (min. 8)" minLength={8} required className="w-44" /><SubmitButton type="submit" size="sm" variant="outline">Ganti sandi</SubmitButton></ActionForm>
               {u.id !== me.id && (<>

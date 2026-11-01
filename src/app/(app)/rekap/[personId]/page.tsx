@@ -60,7 +60,7 @@ export default async function StudentDetailPage({ params, searchParams }: { para
           <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
             <thead className="border-b text-left text-slate-500"><tr><th className="px-3 py-2 font-medium">Tanggal</th><th className="font-medium">Status</th><th className="font-medium">Masuk</th><th className="font-medium">Pulang</th><th className="font-medium">Keterangan</th></tr></thead>
             <tbody>{shown.map((r) => {
-              const notes = [r.lateMin ? `terlambat ${r.lateMin} menit` : null, r.noCheckOut ? "tidak absen pulang" : null, r.leftEarly ? "pulang awal" : null, r.excusedExit ? "izin keluar" : null, r.leaveNote, r.isManual ? `dikoreksi: ${r.note ?? ""}` : null].filter(Boolean);
+              const notes = [r.calNote, r.lateMin ? `terlambat ${r.lateMin} menit` : null, r.noCheckOut ? "tidak absen pulang" : null, r.leftEarly ? "pulang awal" : null, r.excusedExit ? "izin keluar" : null, r.leaveNote, r.isManual ? `dikoreksi: ${r.note ?? ""}` : null].filter(Boolean);
               return (<tr key={r.date} className={`border-b last:border-0 ${r.status === "libur" ? "text-slate-400" : ""}`}>
                 <td className="px-3 py-2">{fmtDay(r.date)}</td><td><Pill tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</Pill></td>
                 <td className="tabular-nums">{fmtTime(r.checkIn)}</td><td className="tabular-nums">{fmtTime(r.checkOut)}</td><td className="pr-3 text-slate-600">{notes.join(" · ")}</td></tr>);

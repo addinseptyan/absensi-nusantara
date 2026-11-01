@@ -86,7 +86,7 @@ async function main() {
     if (!has.length) {
       const [u] = await db
         .insert(s.users)
-        .values({ email, name: "Administrator", passwordHash: await bcrypt.hash(password, 12) })
+        .values({ username: "admin", email, name: "Administrator", passwordHash: await bcrypt.hash(password, 12) })
         .returning();
       const [adminRole] = await db.select().from(s.roles).where(eq(s.roles.slug, "admin"));
       await db.insert(s.userRoles).values({ userId: u.id, roleId: adminRole.id });

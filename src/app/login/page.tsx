@@ -14,7 +14,7 @@ export default function LoginPage() {
         <h1 className="text-xl font-semibold text-slate-900">Masuk ke Absensi Nusantara</h1>
         <p className="mb-5 mt-1 text-sm text-slate-600">Gunakan akun yang diberikan admin sekolah.</p>
         <form action={formAction} className="space-y-4">
-          <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" autoComplete="username" required /></div>
+          <div className="space-y-1.5"><Label htmlFor="login">Username atau email</Label><Input id="login" name="login" type="text" autoComplete="username" autoCapitalize="none" required /></div>
           <div className="space-y-1.5"><Label htmlFor="password">Kata sandi</Label><Input id="password" name="password" type="password" autoComplete="current-password" required /></div>
           {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
           <Button type="submit" className="w-full" disabled={pending}>{pending ? "Memeriksa…" : "Masuk"}</Button>

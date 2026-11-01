@@ -1,12 +1,13 @@
 import { asc, eq } from "drizzle-orm";
 import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
+import { Modal } from "@/components/shared/modal";
 import { Input } from "@/components/ui/input";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { addDays } from "@/lib/attendance/time";
 import { fmtShort } from "@/lib/format";
-import { addEntries, deleteEntries } from "./actions";
+import { addEntries, deleteEntries, updateEntries } from "./actions";
 
 const AUD = { all: "Siswa dan guru", student: "Siswa", staff: "Guru" } as const;
 const sel = "block h-9 w-full rounded-md border bg-white px-2 text-sm";
@@ -50,9 +51,28 @@ export default async function CalendarPage() {
               <div className="flex-1"><p className="text-sm">{g.reason}</p>
                 <p className="text-xs text-slate-500">{g.scopeType === "school" ? "Seluruh sekolah" : `Kelas ${g.grade}`} · {AUD[g.audience]}</p></div>
               <Pill tone={g.kind === "non_effective" ? "warn" : "ok"}>{g.kind === "non_effective" ? "Tidak efektif" : "Keterangan"}</Pill>
+              <EditEntry g={g} />
               <ConfirmAction action={deleteEntries} fields={{ from: g.from, to: g.to, reason: g.reason, scopeType: g.scopeType, grade: g.grade, audience: g.audience }} label="Hapus" title="Hapus entri kalender?" description={`Entri "${g.reason}" akan dihapus dari kalender dan rekap pada tanggal itu dihitung ulang.`} />
             </li>))}</ul>)}
       </section>
     </div>
+  );
+}
+
+function EditEntry({ g }: { g: { from: string; to: string; kind: string; reason: string; scopeType: string; grade: string; audience: string } }) {
+  return (
+    <Modal label="Ubah" title="Ubah entri kalender">
+      <ActionForm action={updateEntries} className="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="oFrom" value={g.from} /><input type="hidden" name="oTo" value={g.to} /><input type="hidden" name="oReason" value={g.reason} />
+        <input type="hidden" name="oScopeType" value={g.scopeType} /><input type="hidden" name="oGrade" value={g.grade} /><input type="hidden" name="oAudience" value={g.audience} />
+        <label className="space-y-1 text-sm">Dari<Input type="date" name="from" defaultValue={g.from} required /></label>
+        <label className="space-y-1 text-sm">Sampai<Input type="date" name="to" defaultValue={g.to} required /></label>
+        <label className="space-y-1 text-sm">Jenis<select name="kind" defaultValue={g.kind} className={sel}><option value="non_effective">Tidak efektif</option><option value="effective">Hari efektif, hanya keterangan</option></select></label>
+        <label className="space-y-1 text-sm">Berlaku untuk<select name="scope" defaultValue={g.scopeType === "school" ? "school" : g.grade} className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></select></label>
+        <label className="space-y-1 text-sm">Peserta<select name="audience" defaultValue={g.audience} className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></select></label>
+        <label className="space-y-1 text-sm">Keterangan<Input name="reason" defaultValue={g.reason} required minLength={3} maxLength={120} /></label>
+        <div className="sm:col-span-2"><SubmitButton>Simpan perubahan</SubmitButton></div>
+      </ActionForm>
+    </Modal>
   );
 }

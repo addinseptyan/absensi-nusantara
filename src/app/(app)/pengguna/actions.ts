@@ -1,7 +1,7 @@
 "use server";
 import { guard } from "@/lib/action";
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, schema as s } from "@/db";
@@ -10,7 +10,8 @@ import { requirePermission } from "@/lib/auth/current-user";
 
 const Create = z.object({
   name: z.string().trim().min(2).max(100),
-  email: z.string().trim().email(),
+  username: z.string().trim().regex(/^[A-Za-z0-9._-]{3,30}$/, "Username 3-30 karakter: huruf, angka, titik, garis bawah, atau strip."),
+  email: z.string().trim().email("Format email tidak valid.").optional().or(z.literal("")),
   password: z.string().min(8, "Kata sandi minimal 8 karakter").max(100),
   roleId: z.coerce.number().int(),
   personId: z.string().optional(),
@@ -19,11 +20,12 @@ const Create = z.object({
 async function createUser_impl(form: FormData): Promise<string> {
   const admin = await requirePermission("user.manage");
   const f = Create.parse(Object.fromEntries(form));
-  const email = f.email.toLowerCase();
-  const [dup] = await db.select({ id: s.users.id }).from(s.users).where(eq(sql`lower(${s.users.email})`, email));
-  if (dup) throw new Error("Email itu sudah dipakai akun lain.");
+  const username = f.username.toLowerCase();
+  const email = f.email ? f.email.toLowerCase() : null;
+  const taken = await db.select({ id: s.users.id }).from(s.users).where(or(eq(sql`lower(${s.users.username})`, username), email ? eq(sql`lower(${s.users.email})`, email) : undefined));
+  if (taken.length) throw new Error("Username atau email itu sudah dipakai akun lain.");
   const [u] = await db.insert(s.users).values({
-    name: f.name, email, passwordHash: await bcrypt.hash(f.password, 12), personId: f.personId ? Number(f.personId) : null,
+    name: f.name, username, email, passwordHash: await bcrypt.hash(f.password, 12), personId: f.personId ? Number(f.personId) : null,
   }).returning({ id: s.users.id });
   await db.insert(s.userRoles).values({ userId: u.id, roleId: f.roleId });
   await audit(admin.id, "user.create", "users", String(u.id), { email, roleId: f.roleId });
@@ -79,5 +81,19 @@ export async function deleteUser(form: FormData) {
     await audit(admin.id, "user.delete", "users", String(userId), { email: u.email });
     revalidatePath("/pengguna");
     return `Akun ${u.name} dihapus.`;
+  });
+}
+
+export async function setUsername(form: FormData) {
+  return guard(async () => {
+    const admin = await requirePermission("user.manage");
+    const f = z.object({ userId: z.coerce.number().int(), username: z.string().trim().regex(/^[A-Za-z0-9._-]{3,30}$/, "Username 3-30 karakter: huruf, angka, titik, garis bawah, atau strip.") }).parse(Object.fromEntries(form));
+    const username = f.username.toLowerCase();
+    const [dup] = await db.select({ id: s.users.id }).from(s.users).where(eq(sql`lower(${s.users.username})`, username));
+    if (dup && dup.id !== f.userId) throw new Error("Username itu sudah dipakai akun lain.");
+    await db.update(s.users).set({ username }).where(eq(s.users.id, f.userId));
+    await audit(admin.id, "user.username_set", "users", String(f.userId), { username });
+    revalidatePath("/pengguna");
+    return `Username diubah menjadi "${username}".`;
   });
 }

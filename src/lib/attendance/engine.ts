@@ -74,22 +74,26 @@ export type CalendarEntry = {
   grade: string | null;
   classId: number | null;
   kind: "effective" | "non_effective";
+  reason?: string;
 };
 
-/** Kalender berlapis: kelas > tingkat > sekolah; audiens spesifik mengalahkan "all". null = tidak ada aturan khusus. */
-export function resolveCalendar(
+/** Entri kalender yang berlaku. Kalender berlapis: kelas > tingkat > sekolah; audiens spesifik mengalahkan "all". */
+export function findCalendarEntry(
   entries: CalendarEntry[], date: string, type: PersonType, grade?: string | null, classId?: number | null,
-): "effective" | "non_effective" | null {
-  let best: { score: number; kind: CalendarEntry["kind"] } | null = null;
+): CalendarEntry | null {
+  let best: { score: number; entry: CalendarEntry } | null = null;
   for (const e of entries) {
     if (e.date !== date || !(e.audience === "all" || e.audience === type)) continue;
     const applies = e.scopeType === "school" || (e.scopeType === "grade" && !!grade && e.grade === grade) || (e.scopeType === "class" && classId != null && e.classId === classId);
     if (!applies) continue;
     const score = ({ school: 1, grade: 2, class: 3 }[e.scopeType]) * 10 + (e.audience === type ? 1 : 0);
-    if (!best || score > best.score) best = { score, kind: e.kind };
+    if (!best || score > best.score) best = { score, entry: e };
   }
-  return best?.kind ?? null;
+  return best?.entry ?? null;
 }
+
+/** null = tidak ada aturan khusus. */
+export const resolveCalendar = (...a: Parameters<typeof findCalendarEntry>): "effective" | "non_effective" | null => findCalendarEntry(...a)?.kind ?? null;
 
 export type DayInput = {
   date: string;

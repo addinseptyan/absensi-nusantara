@@ -45,7 +45,11 @@ export function ActionForm({ action, reset, confirm, children, ...props }: Omit<
   const [pending, start] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null);
   const held = useRef<{ data: FormData; form: HTMLFormElement } | null>(null);
-  const run = (data: FormData, form: HTMLFormElement) => start(async () => { if ((await execute(action, data)) && reset) form.reset(); });
+  const run = (data: FormData, form: HTMLFormElement) => start(async () => {
+    const ok = await execute(action, data);
+    if (ok && reset) form.reset();
+    if (ok) form.closest("dialog")?.close(); // form di dalam jendela (Modal) menutup jendelanya sendiri
+  });
 
   return (
     <Pending.Provider value={pending}>

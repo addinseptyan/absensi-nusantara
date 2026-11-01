@@ -160,3 +160,15 @@
    --primary-foreground: oklch(0.985 0 0);
    --ring: oklch(0.62 0.1 186);
 }
+
+/* ===== Satu bentuk untuk semua tombol dan kolom isian (tempel juga di paling bawah globals.css) ===== */
+:root {
+   --radius-control: 0.625rem;
+}
+
+button:not([data-sonner-toaster] *),
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+   border-radius: var(--radius-control);
+}
