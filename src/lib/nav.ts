@@ -3,6 +3,8 @@ import { can, type PermissionCode } from "@/lib/permissions";
 // Urutan = prioritas halaman awal setelah login. Menu baru = tambah satu baris di sini (dan ikonnya di app-shell).
 export const NAV_ITEMS: { href: string; label: string; perm: PermissionCode | PermissionCode[] }[] = [
   { href: "/rekap", label: "Rekap kehadiran", perm: ["rekap.view_all", "rekap.view_own_class"] },
+  { href: "/rekap-guru", label: "Rekap guru", perm: "rekap.view_all" },
+  { href: "/saya", label: "Kehadiran saya", perm: "rekap.view_self" },
   { href: "/koreksi", label: "Koreksi kehadiran", perm: ["attendance.correct", "leave.create_own_class"] },
   { href: "/data", label: "Data siswa & guru", perm: ["student.manage", "staff.manage"] },
   { href: "/kelas", label: "Kelas & wali kelas", perm: "class.manage" },

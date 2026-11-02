@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Activity, Briefcase, CalendarDays, ClipboardCheck, Clock, GraduationCap, LayoutDashboard, School, ShieldCheck, Users } from "lucide-react";
+import { Activity, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Clock, GraduationCap, LayoutDashboard, School, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -9,14 +9,14 @@ import { GlassCard } from "./glass-card";
 import { PasswordForm } from "./password-form";
 
 const ICONS: Record<string, typeof Activity> = {
-  "/rekap": LayoutDashboard, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase,
+  "/rekap": LayoutDashboard, "/rekap-guru": ClipboardList, "/saya": UserCheck, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase,
   "/kalender": CalendarDays, "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
 };
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const items = (user.mustChangePassword ? [] : allowedNav(user.permissions)).map(({ href, label }) => {
+  const items = (user.mustChangePassword ? [] : allowedNav(user.permissions).filter((n) => n.href !== "/saya" || user.personId)).map(({ href, label }) => {
     const Icon = ICONS[href];
     return { href, label, icon: <Icon /> };
   });

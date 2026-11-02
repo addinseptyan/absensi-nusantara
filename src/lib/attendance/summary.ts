@@ -35,3 +35,22 @@ export async function studentSummary(from: string, to: string, classIds: number[
     return { ...r, present, effective, pct: effective ? Math.round((present / effective) * 1000) / 10 : null };
   });
 }
+
+/** Rekap per guru/pegawai. Hari efektif = hari wajib hadirnya; scan di luar jadwal dihitung "tambahan" dan tidak memengaruhi persentase. */
+export async function staffSummary(from: string, to: string) {
+  const rows = await db.select({
+    personId: s.people.id, name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix,
+    hadir: cnt("hadir"), terlambat: cnt("terlambat"), izin: cnt("izin"), sakit: cnt("sakit"), dispensasi: cnt("dispensasi"), alpa: cnt("alpa"), pending: cnt("belum_ada_data"),
+    extra: sql<number>`count(*) filter (where ${s.attendanceDaily.status} = 'libur' and ${s.attendanceDaily.checkIn} is not null)`.mapWith(Number),
+  })
+    .from(s.attendanceDaily)
+    .innerJoin(s.people, eq(s.people.id, s.attendanceDaily.personId))
+    .where(and(between(s.attendanceDaily.date, from, to), eq(s.people.type, "staff"), eq(s.people.status, "active")))
+    .groupBy(s.people.id)
+    .orderBy(asc(s.people.name));
+  return rows.map((r) => {
+    const present = r.hadir + r.terlambat + r.dispensasi;
+    const effective = present + r.izin + r.sakit + r.alpa;
+    return { ...r, present, effective, pct: effective ? Math.round((present / effective) * 1000) / 10 : null };
+  });
+}
