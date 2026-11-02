@@ -5,6 +5,8 @@ export const NAV_ITEMS: { href: string; label: string; perm: PermissionCode | Pe
   { href: "/rekap", label: "Rekap kehadiran", perm: ["rekap.view_all", "rekap.view_own_class"] },
   { href: "/koreksi", label: "Koreksi kehadiran", perm: ["attendance.correct", "leave.create_own_class"] },
   { href: "/data", label: "Data siswa & guru", perm: ["student.manage", "staff.manage"] },
+  { href: "/kelas", label: "Kelas & wali kelas", perm: "class.manage" },
+  { href: "/pkl", label: "PKL", perm: "pkl.manage" },
   { href: "/kalender", label: "Kalender", perm: "calendar.manage" },
   { href: "/aturan", label: "Aturan jam", perm: "settings.rules" },
   { href: "/pengguna", label: "Pengguna", perm: "user.manage" },

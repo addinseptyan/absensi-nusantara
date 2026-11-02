@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, CalendarDays, Check, ClipboardCheck, Clock, GraduationCap, LayoutDashboard, LogOut, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Activity, CalendarDays, Check, ClipboardCheck, Clock, Briefcase, GraduationCap, LayoutDashboard, LogOut, School, ShieldCheck, Users } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { allowedNav } from "@/lib/nav";
@@ -8,7 +9,7 @@ import { MobileMenu, NavLink } from "./nav";
 import { PasswordForm } from "./password-form";
 
 const ICONS: Record<string, typeof Activity> = {
-  "/rekap": LayoutDashboard, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kalender": CalendarDays,
+  "/rekap": LayoutDashboard, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase, "/kalender": CalendarDays,
   "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
 };
 
@@ -21,15 +22,18 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   const links = items.map(({ href, label }) => { const Icon = ICONS[href]; return <NavLink key={href} href={href} label={label} icon={<Icon className="size-4" />} />; });
   const account = (
-    <div className="mt-2 space-y-2 border-t border-slate-200/70 pt-3">
-      <div className="flex items-center gap-3 px-1" title={user.username ? `@${user.username}` : undefined}>
+    <div className="mt-2 flex items-center gap-1.5 border-t border-slate-200/70 pt-3">
+      <Link href="/akun" title={user.username ? `Akun saya (@${user.username})` : "Akun saya"}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-white/80">
         <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">{initials(user.name)}</span>
-        <div className="min-w-0"><p className="truncate text-sm font-medium text-slate-800">{user.name}</p><p className="truncate text-xs text-slate-500">{user.roles.join(", ") || "Tanpa role"}</p></div>
-      </div>
-      <NavLink href="/akun" label="Akun saya" icon={<UserRound className="size-4" />} />
-      <form action={logout}><button className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:bg-slate-100">
-        <LogOut className="size-4" /> Keluar
-      </button></form>
+        <span className="min-w-0"><span className="block truncate text-sm font-medium text-slate-800">{user.name}</span>
+          <span className="block truncate text-xs text-slate-500">{user.roles.join(", ") || "Tanpa role"}</span></span>
+      </Link>
+      <form action={logout}>
+        <button type="submit" title="Keluar" aria-label="Keluar" className="grid size-10 place-items-center border border-slate-300 bg-white text-slate-600 shadow-sm hover:bg-red-50 hover:text-red-700">
+          <LogOut className="size-4" />
+        </button>
+      </form>
     </div>
   );
   const brand = (
