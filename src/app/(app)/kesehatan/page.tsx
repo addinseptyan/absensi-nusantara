@@ -7,6 +7,7 @@ import { ago, fmtWib } from "@/lib/format";
 import { sendCommand } from "./actions";
 import { AutoRefresh } from "./auto-refresh";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 const TONE = { success: "ok", running: "warn", pending: "warn", partial: "warn", failed: "bad", expired: "idle" } as const;
 const LABEL = { success: "Berhasil", running: "Berjalan", pending: "Menunggu agent", partial: "Sebagian", failed: "Gagal", expired: "Kedaluwarsa" } as const;
@@ -53,6 +54,11 @@ export default async function HealthPage() {
         {COMMANDS.map(([type, label]) => (
           <ActionForm key={type} action={sendCommand}><input type="hidden" name="type" value={type} /><SubmitButton variant={type === "diagnose" ? "default" : "outline"} size="sm" pendingText="Mengirim…">{label}</SubmitButton></ActionForm>
         ))}
+      </GlassCard>
+
+      <GlassCard className="flex flex-wrap items-center gap-3 p-4">
+        <div className="flex-1"><p className="font-medium">Cadangan data</p><p className="text-sm text-slate-600">Unduh salinan seluruh data penting dalam satu file Excel. Sebaiknya dilakukan rutin, misalnya setiap akhir bulan.</p></div>
+        <Button variant="outline" render={<a href="/api/backup" />} nativeButton={false}>Unduh cadangan (Excel)</Button>
       </GlassCard>
 
       <section className="rounded-2xl border bg-white p-4">

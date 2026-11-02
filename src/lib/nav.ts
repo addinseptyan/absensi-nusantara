@@ -13,6 +13,8 @@ export const NAV_ITEMS: { href: string; label: string; perm: PermissionCode | Pe
   { href: "/aturan", label: "Aturan jam", perm: "settings.rules" },
   { href: "/pengguna", label: "Pengguna", perm: "user.manage" },
   { href: "/hak-akses", label: "Hak akses", perm: "role.manage" },
+  { href: "/kunci", label: "Kunci periode", perm: "period.lock" },
+  { href: "/audit", label: "Riwayat perubahan", perm: "audit.view" },
   { href: "/kesehatan", label: "Kesehatan sistem", perm: "system.health" },
 ];
 export const allowedNav = (permissions: readonly string[]) => NAV_ITEMS.filter((n) => [n.perm].flat().some((p) => can(permissions, p)));
