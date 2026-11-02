@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
@@ -8,6 +9,7 @@ import { db, schema as s } from "@/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
+import { SelectField } from "@/components/shared/select-field";
 
 const STATUS = { active: "Aktif", graduated: "Lulus", moved: "Pindah", inactive: "Nonaktif" } as const;
 const btn = "inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium shadow-sm";
@@ -42,18 +44,18 @@ export default async function DataPage({ searchParams }: { searchParams: Promise
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-2xl font-semibold text-slate-900">Data siswa dan guru</h1>
           <p className="text-sm text-slate-600">Nama ditulis tanpa gelar. Gelar diisi di kolom terpisah dan hanya tampil di cetakan.</p></div>
-        <Link href={`/data/baru?jenis=${jenis}`} className={`${btn} bg-primary text-primary-foreground hover:bg-primary/90`}>+ Tambah {jenis === "student" ? "siswa" : "guru/pegawai"}</Link>
+        <Button render={<Link href={`/data/baru?jenis=${jenis}`} />} nativeButton={false}>+ Tambah {jenis === "student" ? "siswa" : "guru/pegawai"}</Button>
       </div>
 
       <GlassCard className="space-y-3 p-4">
         {allowed.length > 1 && (
           <div className="flex gap-2">{allowed.map((t) => (
-            <Link key={t} href={`/data?jenis=${t}`} className={`${btn} ${t === jenis ? "bg-teal-700 text-white" : "border bg-white text-slate-700 hover:bg-slate-50"}`}>{t === "student" ? "Siswa" : "Guru dan pegawai"}</Link>))}</div>)}
+            <Button key={t} variant={t === jenis ? "default" : "outline"} render={<Link href={`/data?jenis=${t}`} />} nativeButton={false}>{t === "student" ? "Siswa" : "Guru dan pegawai"}</Button>))}</div>)}
         <form className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="jenis" value={jenis} />
           <label className="min-w-48 flex-1 space-y-1 text-sm">Cari<Input name="q" defaultValue={q.q} placeholder="Nama, PIN, atau NIS/NIP" /></label>
-          {jenis === "student" && <label className="space-y-1 text-sm">Kelas<select name="kelas" defaultValue={q.kelas ?? ""} className={`block ${sel}`}><option value="">Semua</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
-          <label className="space-y-1 text-sm">Status<select name="status" defaultValue={status} className={`block ${sel}`}><option value="active">Aktif</option><option value="all">Semua</option>{(["graduated", "moved", "inactive"] as const).map((k) => <option key={k} value={k}>{STATUS[k]}</option>)}</select></label>
+          {jenis === "student" && <label className="space-y-1 text-sm">Kelas<SelectField name="kelas" defaultValue={q.kelas ?? ""} className={`block ${sel}`}><option value="">Semua</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField></label>}
+          <label className="space-y-1 text-sm">Status<SelectField name="status" defaultValue={status} className={`block ${sel}`}><option value="active">Aktif</option><option value="all">Semua</option>{(["graduated", "moved", "inactive"] as const).map((k) => <option key={k} value={k}>{STATUS[k]}</option>)}</SelectField></label>
           <SubmitButton>Terapkan</SubmitButton>
         </form>
       </GlassCard>
@@ -68,7 +70,7 @@ export default async function DataPage({ searchParams }: { searchParams: Promise
               <div className="flex items-center gap-2">
                 {!r.pin && <Pill tone="warn">PIN belum diisi</Pill>}
                 <Pill tone={r.status === "active" ? "ok" : "idle"}>{STATUS[r.status]}</Pill>
-                <Link href={`/data/${r.id}`} className={`${btn} border bg-white text-slate-700 hover:bg-slate-50`}>Ubah</Link>
+                <Button variant="outline" size="sm" render={<Link href={`/data/${r.id}`} />} nativeButton={false}>Ubah</Button>
               </div>
             </li>))}</ul>)}
       </section>

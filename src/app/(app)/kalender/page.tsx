@@ -8,6 +8,8 @@ import { requirePermission } from "@/lib/auth/current-user";
 import { addDays } from "@/lib/attendance/time";
 import { fmtShort } from "@/lib/format";
 import { addEntries, deleteEntries, updateEntries } from "./actions";
+import { SelectField } from "@/components/shared/select-field";
+import { DateField } from "@/components/shared/date-field";
 
 const AUD = { all: "Siswa dan guru", student: "Siswa", staff: "Guru" } as const;
 const sel = "block h-9 w-full rounded-md border bg-white px-2 text-sm";
@@ -33,11 +35,11 @@ export default async function CalendarPage() {
 
       <GlassCard className="p-4">
         <ActionForm action={addEntries} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" reset>
-          <label className="space-y-1 text-sm">Dari<Input type="date" name="from" defaultValue={ay?.startDate} required /></label>
-          <label className="space-y-1 text-sm">Sampai<Input type="date" name="to" defaultValue={ay?.startDate} required /></label>
-          <label className="space-y-1 text-sm">Jenis<select name="kind" className={sel}><option value="non_effective">Tidak efektif (libur / belajar di rumah)</option><option value="effective">Hari efektif, hanya keterangan</option></select></label>
-          <label className="space-y-1 text-sm">Berlaku untuk<select name="scope" className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></select></label>
-          <label className="space-y-1 text-sm">Peserta<select name="audience" className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></select></label>
+          <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={ay?.startDate} required /></label>
+          <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={ay?.startDate} required /></label>
+          <label className="space-y-1 text-sm">Jenis<SelectField name="kind" className={sel}><option value="non_effective">Tidak efektif (libur / belajar di rumah)</option><option value="effective">Hari efektif, hanya keterangan</option></SelectField></label>
+          <label className="space-y-1 text-sm">Berlaku untuk<SelectField name="scope" className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></SelectField></label>
+          <label className="space-y-1 text-sm">Peserta<SelectField name="audience" className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></SelectField></label>
           <label className="space-y-1 text-sm">Keterangan<Input name="reason" placeholder="mis. Libur Natal" required maxLength={120} /></label>
           <div className="sm:col-span-2 lg:col-span-3"><SubmitButton type="submit">Simpan ke kalender</SubmitButton></div>
         </ActionForm>
@@ -65,11 +67,11 @@ function EditEntry({ g }: { g: { from: string; to: string; kind: string; reason:
       <ActionForm action={updateEntries} className="grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="oFrom" value={g.from} /><input type="hidden" name="oTo" value={g.to} /><input type="hidden" name="oReason" value={g.reason} />
         <input type="hidden" name="oScopeType" value={g.scopeType} /><input type="hidden" name="oGrade" value={g.grade} /><input type="hidden" name="oAudience" value={g.audience} />
-        <label className="space-y-1 text-sm">Dari<Input type="date" name="from" defaultValue={g.from} required /></label>
-        <label className="space-y-1 text-sm">Sampai<Input type="date" name="to" defaultValue={g.to} required /></label>
-        <label className="space-y-1 text-sm">Jenis<select name="kind" defaultValue={g.kind} className={sel}><option value="non_effective">Tidak efektif</option><option value="effective">Hari efektif, hanya keterangan</option></select></label>
-        <label className="space-y-1 text-sm">Berlaku untuk<select name="scope" defaultValue={g.scopeType === "school" ? "school" : g.grade} className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></select></label>
-        <label className="space-y-1 text-sm">Peserta<select name="audience" defaultValue={g.audience} className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></select></label>
+        <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={g.from} required /></label>
+        <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={g.to} required /></label>
+        <label className="space-y-1 text-sm">Jenis<SelectField name="kind" defaultValue={g.kind} className={sel}><option value="non_effective">Tidak efektif</option><option value="effective">Hari efektif, hanya keterangan</option></SelectField></label>
+        <label className="space-y-1 text-sm">Berlaku untuk<SelectField name="scope" defaultValue={g.scopeType === "school" ? "school" : g.grade} className={sel}><option value="school">Seluruh sekolah</option><option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option></SelectField></label>
+        <label className="space-y-1 text-sm">Peserta<SelectField name="audience" defaultValue={g.audience} className={sel}><option value="all">Siswa dan guru</option><option value="student">Siswa saja</option><option value="staff">Guru saja</option></SelectField></label>
         <label className="space-y-1 text-sm">Keterangan<Input name="reason" defaultValue={g.reason} required minLength={3} maxLength={120} /></label>
         <div className="sm:col-span-2"><SubmitButton>Simpan perubahan</SubmitButton></div>
       </ActionForm>

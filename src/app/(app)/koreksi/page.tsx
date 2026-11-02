@@ -11,6 +11,8 @@ import { visibleClasses } from "@/lib/attendance/summary";
 import { localParts } from "@/lib/attendance/time";
 import { STATUS_LABEL, STATUS_TONE, fmtTime, fmtWib } from "@/lib/format";
 import { correct, undoCorrection } from "./actions";
+import { SelectField } from "@/components/shared/select-field";
+import { DateField } from "@/components/shared/date-field";
 
 const OPTIONS = [["hadir", "Hadir (tanpa scan)"], ["izin", "Izin"], ["sakit", "Sakit"], ["dispensasi", "Dispensasi"], ["alpa", "Alpa"], ["auto", "Kembali ke otomatis"]] as const;
 const sel = "h-9 rounded-md border bg-white px-2 text-sm";
@@ -44,9 +46,9 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
       </div>
       <GlassCard className="p-4">
         <form className="flex flex-wrap items-end gap-3">
-          <label className="space-y-1 text-sm">Tanggal<Input type="date" name="tanggal" defaultValue={date} /></label>
+          <label className="space-y-1 text-sm">Tanggal<DateField name="tanggal" defaultValue={date} /></label>
           <label className="space-y-1 text-sm">Kelas
-            <select name="kelas" defaultValue={kelas?.id ?? ""} className={`block ${sel}`}><option value="">Semua kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+            <SelectField name="kelas" defaultValue={kelas?.id ?? ""} className={`block ${sel}`}><option value="">Semua kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField>
           </label>
           {q.semua && <input type="hidden" name="semua" value="1" />}
           <SubmitButton>Tampilkan</SubmitButton>
@@ -76,7 +78,7 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
                   <div className="flex flex-1 flex-wrap items-start gap-2">
                     <ActionForm action={correct} className="flex flex-1 flex-wrap gap-2">
                       <input type="hidden" name="personId" value={r.personId} /><input type="hidden" name="date" value={date} />
-                      <select name="status" defaultValue={preset} className={sel}>{OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+                      <SelectField name="status" defaultValue={preset} className={sel}>{OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</SelectField>
                       <Input name="note" defaultValue={r.isManual ? r.note ?? "" : ""} placeholder="Keterangan (wajib)" className="min-w-40 flex-1" maxLength={300} />
                       <SubmitButton size="sm" variant="outline">Simpan</SubmitButton>
                     </ActionForm>

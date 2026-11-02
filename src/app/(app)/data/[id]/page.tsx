@@ -8,6 +8,8 @@ import { db, schema as s } from "@/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { can } from "@/lib/permissions";
 import { savePerson } from "../actions";
+import { SelectField } from "@/components/shared/select-field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 const sel = "block h-9 w-full rounded-md border bg-white px-2 text-sm";
@@ -44,14 +46,14 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
           <label className="space-y-1 text-sm">Gelar belakang<Input name="titleSuffix" defaultValue={person?.titleSuffix ?? ""} placeholder="mis. S.Pd., M.Pd." maxLength={30} /></label>
           {type === "student" ? (<>
             <label className="space-y-1 text-sm">NIS<Input name="nis" defaultValue={person?.nis ?? ""} maxLength={30} inputMode="numeric" /></label>
-            <label className="space-y-1 text-sm">Kelas (tahun ajaran aktif)<select name="classId" defaultValue={currentClass ?? ""} className={sel}><option value="">Belum ada kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+            <label className="space-y-1 text-sm">Kelas (tahun ajaran aktif)<SelectField name="classId" defaultValue={currentClass ?? ""} className={sel}><option value="">Belum ada kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField></label>
           </>) : <label className="space-y-1 text-sm">NIP<Input name="nip" defaultValue={person?.nip ?? ""} maxLength={30} inputMode="numeric" /></label>}
           <label className="space-y-1 text-sm">{type === "student" ? "No. HP wali murid" : "No. HP"}<Input name="parentPhone" defaultValue={person?.parentPhone ?? ""} inputMode="tel" placeholder="08xxxxxxxxxx" maxLength={20} /></label>
           <label className="space-y-1 text-sm">PIN mesin absen<Input name="devicePin" defaultValue={person?.devicePin ?? ""} maxLength={20} /><span className="text-xs text-slate-500">Harus sama dengan ID orang ini di mesin. Tanpa PIN, scan tidak bisa dicocokkan.</span></label>
-          <label className="space-y-1 text-sm">Status<select name="status" defaultValue={person?.status ?? "active"} className={sel}><option value="active">Aktif</option><option value="graduated">Lulus</option><option value="moved">Pindah</option><option value="inactive">Nonaktif</option></select></label>
+          <label className="space-y-1 text-sm">Status<SelectField name="status" defaultValue={person?.status ?? "active"} className={sel}><option value="active">Aktif</option><option value="graduated">Lulus</option><option value="moved">Pindah</option><option value="inactive">Nonaktif</option></SelectField></label>
           {type === "staff" && (
             <fieldset className="sm:col-span-2"><legend className="mb-2 text-sm">Hari wajib hadir <span className="text-slate-500">(di hari lain scan opsional, tidak dihitung alpa)</span></legend>
-              <div className="flex flex-wrap gap-3">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm"><input type="checkbox" name="wd" value={i + 1} defaultChecked={days.has(i + 1)} className="size-4 accent-teal-700" />{d}</label>)}</div></fieldset>)}
+              <div className="flex flex-wrap gap-3">{DAYS.map((d, i) => <label key={d} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm"><Checkbox name="wd" value={String(i + 1)} defaultChecked={days.has(i + 1)} className="size-4 accent-teal-700" />{d}</label>)}</div></fieldset>)}
           <div className="sm:col-span-2"><SubmitButton>{isNew ? "Tambahkan" : "Simpan perubahan"}</SubmitButton></div>
         </ActionForm>
         <p className="mt-4 text-xs text-slate-500">Data tidak dihapus agar riwayat kehadirannya tetap utuh. Untuk siswa yang keluar, ubah statusnya menjadi Lulus, Pindah, atau Nonaktif.</p>

@@ -1,13 +1,15 @@
 "use client";
-import { createContext, useContext, useRef, useTransition } from "react";
+import { createContext, useContext, useRef, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button, buttonVariants } from "@/components/ui/button";
 import type { ActionResult } from "@/lib/action";
+import { cn } from "@/lib/utils";
+import { useCloseModal } from "./modal";
 
 type Action = (form: FormData) => Promise<ActionResult>;
 const Pending = createContext(false);
-const OFFLINE = "Tidak dapat menghubungi server. Periksa koneksi internet lalu coba lagi.";
 
 async function execute(action: Action, data: FormData): Promise<boolean> {
   try {
@@ -15,26 +17,24 @@ async function execute(action: Action, data: FormData): Promise<boolean> {
     (r.ok ? toast.success : toast.error)(r.message);
     return r.ok;
   } catch {
-    toast.error(OFFLINE);
+    toast.error("Tidak dapat menghubungi server. Periksa koneksi internet lalu coba lagi.");
     return false;
   }
 }
 
-function ConfirmDialog({ dialog, title, description, confirmLabel, danger, onConfirm }: {
-  dialog: React.RefObject<HTMLDialogElement | null>; title: string; description: string; confirmLabel: string; danger?: boolean; onConfirm: () => void;
+function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel, danger, onConfirm }: {
+  open: boolean; onOpenChange: (o: boolean) => void; title: string; description: string; confirmLabel: string; danger?: boolean; onConfirm: () => void;
 }) {
   return (
-    <dialog ref={dialog} onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border bg-white p-0 shadow-xl backdrop:bg-slate-900/40">
-      <div className="space-y-4 p-5">
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-600">{description}</p>
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="outline" onClick={() => dialog.current?.close()}>Batal</Button>
-          <Button type="button" variant={danger ? "destructive" : "default"} onClick={() => { dialog.current?.close(); onConfirm(); }}>{confirmLabel}</Button>
-        </div>
-      </div>
-    </dialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader><AlertDialogTitle>{title}</AlertDialogTitle><AlertDialogDescription>{description}</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Batal</AlertDialogCancel>
+          <AlertDialogAction className={cn(danger && buttonVariants({ variant: "destructive" }))} onClick={() => { onOpenChange(false); onConfirm(); }}>{confirmLabel}</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -43,12 +43,13 @@ export function ActionForm({ action, reset, confirm, children, ...props }: Omit<
   action: Action; reset?: boolean; confirm?: { title: string; description: string; label?: string };
 }) {
   const [pending, start] = useTransition();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [asking, setAsking] = useState(false);
   const held = useRef<{ data: FormData; form: HTMLFormElement } | null>(null);
+  const closeModal = useCloseModal();
   const run = (data: FormData, form: HTMLFormElement) => start(async () => {
     const ok = await execute(action, data);
     if (ok && reset) form.reset();
-    if (ok) form.closest("dialog")?.close(); // form di dalam jendela (Modal) menutup jendelanya sendiri
+    if (ok) closeModal?.(); // form di dalam jendela (Modal) menutup jendelanya sendiri
   });
 
   return (
@@ -56,9 +57,9 @@ export function ActionForm({ action, reset, confirm, children, ...props }: Omit<
       <form {...props} onSubmit={(e) => {
         e.preventDefault();
         const form = e.currentTarget, data = new FormData(form);
-        if (confirm) { held.current = { data, form }; dialog.current?.showModal(); } else run(data, form);
+        if (confirm) { held.current = { data, form }; setAsking(true); } else run(data, form);
       }}>{children}</form>
-      {confirm && <ConfirmDialog dialog={dialog} title={confirm.title} description={confirm.description} confirmLabel={confirm.label ?? "Ya, lanjutkan"}
+      {confirm && <ConfirmDialog open={asking} onOpenChange={setAsking} title={confirm.title} description={confirm.description} confirmLabel={confirm.label ?? "Ya, lanjutkan"}
         onConfirm={() => held.current && run(held.current.data, held.current.form)} />}
     </Pending.Provider>
   );
@@ -69,7 +70,7 @@ export function ConfirmAction({ action, fields = {}, label, title, description, 
   action: Action; fields?: Record<string, string | number>; label: string; title: string; description: string; confirmLabel?: string; tone?: "danger" | "neutral";
 }) {
   const [pending, start] = useTransition();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
   const run = () => start(async () => {
     const data = new FormData();
     Object.entries(fields).forEach(([k, v]) => data.append(k, String(v)));
@@ -77,10 +78,10 @@ export function ConfirmAction({ action, fields = {}, label, title, description, 
   });
   return (
     <>
-      <Button type="button" size="sm" variant={tone === "danger" ? "destructive" : "outline"} disabled={pending} onClick={() => dialog.current?.showModal()}>
+      <Button type="button" size="sm" variant={tone === "danger" ? "destructive" : "outline"} disabled={pending} onClick={() => setOpen(true)}>
         {pending && <Loader2 className="size-4 animate-spin" />}{label}
       </Button>
-      <ConfirmDialog dialog={dialog} title={title} description={description} confirmLabel={confirmLabel ?? label} danger={tone === "danger"} onConfirm={run} />
+      <ConfirmDialog open={open} onOpenChange={setOpen} title={title} description={description} confirmLabel={confirmLabel ?? label} danger={tone === "danger"} onConfirm={run} />
     </>
   );
 }

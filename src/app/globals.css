@@ -131,20 +131,23 @@
    }
 }
 
-/* ===== Tambahan Absensi Nusantara: tempel di PALING BAWAH src/app/globals.css ===== */
+/* ===== Tambahan Absensi Nusantara =====
+   Tempel di PALING BAWAH src/app/globals.css.
+   Jika sebelumnya sudah menempel blok "Tambahan Absensi Nusantara" / "Satu bentuk untuk semua tombol", HAPUS blok lama itu dan ganti dengan blok ini. */
 @layer base {
 
    /* Tailwind v4 membuat tombol berkursor panah. Kembalikan jadi tangan untuk semua yang bisa diklik. */
    button:not(:disabled),
    [role="button"]:not([aria-disabled="true"]),
+   [role="checkbox"],
+   [role="combobox"],
+   [role="option"],
+   [role="menuitem"],
+   [role="tab"],
    a[href],
    summary,
-   select,
-   input[type="checkbox"],
-   input[type="radio"],
-   input[type="date"],
-   input[type="time"],
-   label[for] {
+   label[for],
+   input[type="time"] {
       cursor: pointer;
    }
 
@@ -154,21 +157,14 @@
    }
 }
 
-/* Warna utama aplikasi: teal (tombol utama, fokus). */
 :root {
+   /* Warna utama: teal */
    --primary: oklch(0.51 0.09 186);
    --primary-foreground: oklch(0.985 0 0);
    --ring: oklch(0.62 0.1 186);
-}
-
-/* ===== Satu bentuk untuk semua tombol dan kolom isian (tempel juga di paling bawah globals.css) ===== */
-:root {
+   --sidebar-primary: oklch(0.51 0.09 186);
+   --sidebar-primary-foreground: oklch(0.985 0 0);
+   --sidebar-accent: oklch(0.95 0.03 186);
+   --sidebar-accent-foreground: oklch(0.32 0.06 186);
    --radius-control: 0.625rem;
-}
-
-button:not([data-sonner-toaster] *),
-input:not([type="checkbox"]):not([type="radio"]),
-select,
-textarea {
-   border-radius: var(--radius-control);
 }

@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth/current-user";
 import { ago, fmtWib } from "@/lib/format";
 import { sendCommand } from "./actions";
 import { AutoRefresh } from "./auto-refresh";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const TONE = { success: "ok", running: "warn", pending: "warn", partial: "warn", failed: "bad", expired: "idle" } as const;
 const LABEL = { success: "Berhasil", running: "Berjalan", pending: "Menunggu agent", partial: "Sebagian", failed: "Gagal", expired: "Kedaluwarsa" } as const;
@@ -74,13 +75,13 @@ export default async function HealthPage() {
       <section className="rounded-2xl border bg-white p-4">
         <h2 className="mb-2 font-medium">Riwayat sync</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-slate-500"><tr><th className="py-1 pr-3">Waktu</th><th className="pr-3">Pemicu</th><th className="pr-3">Status</th><th className="pr-3">Ditarik</th><th className="pr-3">Baru</th><th>Keterangan</th></tr></thead>
-            <tbody>{runs.map((r) => (
-              <tr key={r.id} className="border-t"><td className="py-1.5 pr-3">{fmtWib(r.startedAt)}</td><td className="pr-3">{r.trigger === "schedule" ? "Jadwal" : "Manual"}</td>
-                <td className="pr-3"><Pill tone={TONE[r.status]}>{LABEL[r.status]}</Pill></td><td className="pr-3">{r.fetchedCount}</td><td className="pr-3">{r.newCount}</td><td className="text-red-700">{r.errorMessage}</td></tr>
-            ))}</tbody>
-          </table>
+          <Table className="w-full text-sm">
+            <TableHeader className="text-left text-slate-500"><TableRow><TableHead className="py-1 pr-3">Waktu</TableHead><TableHead className="pr-3">Pemicu</TableHead><TableHead className="pr-3">Status</TableHead><TableHead className="pr-3">Ditarik</TableHead><TableHead className="pr-3">Baru</TableHead><TableHead>Keterangan</TableHead></TableRow></TableHeader>
+            <TableBody>{runs.map((r) => (
+              <TableRow key={r.id} className="border-t"><TableCell className="py-1.5 pr-3">{fmtWib(r.startedAt)}</TableCell><TableCell className="pr-3">{r.trigger === "schedule" ? "Jadwal" : "Manual"}</TableCell>
+                <TableCell className="pr-3"><Pill tone={TONE[r.status]}>{LABEL[r.status]}</Pill></TableCell><TableCell className="pr-3">{r.fetchedCount}</TableCell><TableCell className="pr-3">{r.newCount}</TableCell><TableCell className="whitespace-normal text-red-700">{r.errorMessage}</TableCell></TableRow>
+            ))}</TableBody>
+          </Table>
         </div>
       </section>
 

@@ -7,6 +7,8 @@ import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { fmtShort } from "@/lib/format";
 import { addPkl, deletePkl, updatePkl } from "./actions";
+import { DateField } from "@/components/shared/date-field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const day = (d: string) => `${fmtShort(d)} ${d.slice(0, 4)}`;
 
@@ -39,17 +41,17 @@ export default async function PklPage() {
         <ActionForm action={addPkl} reset className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="space-y-1 text-sm sm:col-span-3">Tempat PKL<Input name="place" placeholder="mis. CV Maju Jaya, atau PKL (tempat beragam)" required maxLength={120} /></label>
-            <label className="space-y-1 text-sm">Mulai<Input type="date" name="from" required /></label>
-            <label className="space-y-1 text-sm">Selesai<Input type="date" name="to" required /></label>
+            <label className="space-y-1 text-sm">Mulai<DateField name="from" required /></label>
+            <label className="space-y-1 text-sm">Selesai<DateField name="to" required /></label>
           </div>
           <fieldset><legend className="mb-2 text-sm">Siswa peserta. Centang satu kelas penuh, atau buka kelas lalu pilih siswanya.</legend>
             <div className="space-y-2">{classes.map((c) => (
               <details key={c.id} className="rounded-lg border bg-white">
                 <summary className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                  <input type="checkbox" name="class" value={c.id} className="size-4 accent-teal-700" /><span className="font-medium">{c.name}</span><span className="text-slate-500">({c.list.length} siswa, centang untuk semua)</span>
+                  <Checkbox name="class" value={String(c.id)} className="size-4 accent-teal-700" /><span className="font-medium">{c.name}</span><span className="text-slate-500">({c.list.length} siswa, centang untuk semua)</span>
                 </summary>
                 <div className="grid gap-1 border-t px-3 py-2 sm:grid-cols-2">{c.list.map((x) => (
-                  <label key={x.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="student" value={x.id} className="size-4 accent-teal-700" />{x.name}</label>))}</div>
+                  <label key={x.id} className="flex items-center gap-2 text-sm"><Checkbox name="student" value={String(x.id)} className="size-4 accent-teal-700" />{x.name}</label>))}</div>
               </details>))}</div>
           </fieldset>
           <SubmitButton>Simpan PKL</SubmitButton>
@@ -74,8 +76,8 @@ export default async function PklPage() {
                     <ActionForm action={updatePkl} className="grid gap-3 sm:grid-cols-2">
                       {Object.entries(key).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                       <label className="space-y-1 text-sm sm:col-span-2">Tempat PKL<Input name="place" defaultValue={g.place} required maxLength={120} /></label>
-                      <label className="space-y-1 text-sm">Mulai<Input type="date" name="from" defaultValue={g.from} required /></label>
-                      <label className="space-y-1 text-sm">Selesai<Input type="date" name="to" defaultValue={g.to} required /></label>
+                      <label className="space-y-1 text-sm">Mulai<DateField name="from" defaultValue={g.from} required /></label>
+                      <label className="space-y-1 text-sm">Selesai<DateField name="to" defaultValue={g.to} required /></label>
                       <div className="sm:col-span-2"><SubmitButton>Simpan perubahan</SubmitButton></div>
                     </ActionForm>
                   </Modal>

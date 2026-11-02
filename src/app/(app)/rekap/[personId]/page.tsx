@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getStudentDetail } from "@/lib/attendance/detail";
 import { localParts } from "@/lib/attendance/time";
 import { STATUS_LABEL, STATUS_TONE, fmtDay, fmtShort, fmtTime } from "@/lib/format";
+import { DateField } from "@/components/shared/date-field";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const LIST = ["terlambat", "izin", "sakit", "dispensasi", "alpa"] as const;
@@ -36,8 +38,8 @@ export default async function StudentDetailPage({ params, searchParams }: { para
 
       <GlassCard className="p-4">
         <form className="flex flex-wrap items-end gap-3">
-          <label className="space-y-1 text-sm">Dari<Input type="date" name="from" defaultValue={from} /></label>
-          <label className="space-y-1 text-sm">Sampai<Input type="date" name="to" defaultValue={to} /></label>
+          <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={from} /></label>
+          <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={to} /></label>
           {q.libur && <input type="hidden" name="libur" value="1" />}
           <Button type="submit">Tampilkan</Button>
         </form>
@@ -57,14 +59,14 @@ export default async function StudentDetailPage({ params, searchParams }: { para
         <div className="flex items-center justify-between border-b p-3"><h2 className="font-medium">Rincian harian</h2>
           <Link className="text-sm text-teal-800 underline" href={`?${new URLSearchParams({ from, to, ...(q.libur ? {} : { libur: "1" }) })}`}>{q.libur ? "Sembunyikan hari libur" : "Tampilkan hari libur"}</Link></div>
         {shown.length === 0 ? <p className="p-6 text-sm text-slate-600">Belum ada data pada rentang ini. Admin dapat menekan Hitung ulang di halaman rekap.</p> : (
-          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
-            <thead className="border-b text-left text-slate-500"><tr><th className="px-3 py-2 font-medium">Tanggal</th><th className="font-medium">Status</th><th className="font-medium">Masuk</th><th className="font-medium">Pulang</th><th className="font-medium">Keterangan</th></tr></thead>
-            <tbody>{shown.map((r) => {
+          <div className="overflow-x-auto"><Table className="w-full min-w-[640px] text-sm">
+            <TableHeader className="border-b text-left text-slate-500"><TableRow><TableHead className="px-3 py-2 font-medium">Tanggal</TableHead><TableHead className="font-medium">Status</TableHead><TableHead className="font-medium">Masuk</TableHead><TableHead className="font-medium">Pulang</TableHead><TableHead className="font-medium">Keterangan</TableHead></TableRow></TableHeader>
+            <TableBody>{shown.map((r) => {
               const notes = [r.calNote, r.lateMin ? `terlambat ${r.lateMin} menit` : null, r.noCheckOut ? "tidak absen pulang" : null, r.leftEarly ? "pulang awal" : null, r.excusedExit ? "izin keluar" : null, r.leaveNote, r.isManual ? `dikoreksi: ${r.note ?? ""}` : null].filter(Boolean);
-              return (<tr key={r.date} className={`border-b last:border-0 ${r.status === "libur" ? "text-slate-400" : ""}`}>
-                <td className="px-3 py-2">{fmtDay(r.date)}</td><td><Pill tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</Pill></td>
-                <td className="tabular-nums">{fmtTime(r.checkIn)}</td><td className="tabular-nums">{fmtTime(r.checkOut)}</td><td className="pr-3 text-slate-600">{notes.join(" · ")}</td></tr>);
-            })}</tbody></table></div>)}
+              return (<TableRow key={r.date} className={`border-b last:border-0 ${r.status === "libur" ? "text-slate-400" : ""}`}>
+                <TableCell className="px-3 py-2">{fmtDay(r.date)}</TableCell><TableCell><Pill tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</Pill></TableCell>
+                <TableCell className="tabular-nums">{fmtTime(r.checkIn)}</TableCell><TableCell className="tabular-nums">{fmtTime(r.checkOut)}</TableCell><TableCell className="whitespace-normal pr-3 text-slate-600">{notes.join(" · ")}</TableCell></TableRow>);
+            })}</TableBody></Table></div>)}
       </section>
     </div>
   );

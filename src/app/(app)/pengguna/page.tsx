@@ -9,6 +9,8 @@ import { fullName } from "@/lib/person";
 import { Modal } from "@/components/shared/modal";
 import { PasswordInput } from "@/components/shared/password-input";
 import { createUser, deleteUser, setPassword, toggleActive, updateUser } from "./actions";
+import { SelectField } from "@/components/shared/select-field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default async function UsersPage() {
   const me = await requirePermission("user.manage");
@@ -39,8 +41,8 @@ export default async function UsersPage() {
           <label className="space-y-1 text-sm">Username<Input name="username" required minLength={3} maxLength={30} autoCapitalize="none" /></label>
           <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" /></label>
           <label className="space-y-1 text-sm">Kata sandi sementara<PasswordInput name="password" minLength={8} required autoComplete="new-password" /></label>
-          <label className="space-y-1 text-sm">Role<select name="roleId" className={`${sel} block w-full`} required>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
-          <label className="space-y-1 text-sm">Data guru (opsional)<select name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.filter((p) => !p.userId).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</select></label>
+          <label className="space-y-1 text-sm">Role<SelectField name="roleId" className={`${sel} block w-full`} required>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</SelectField></label>
+          <label className="space-y-1 text-sm">Data guru (opsional)<SelectField name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.filter((p) => !p.userId).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</SelectField></label>
           <div className="flex items-end"><SubmitButton type="submit">Buat akun</SubmitButton></div>
         </ActionForm>
       </GlassCard>
@@ -83,11 +85,11 @@ function EditUser({ u, roles, roleIds, staff, sel }: {
         <label className="space-y-1 text-sm">Username<Input name="username" defaultValue={u.username ?? ""} required minLength={3} maxLength={30} autoCapitalize="none" /></label>
         <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" defaultValue={u.email ?? ""} /></label>
         <label className="space-y-1 text-sm sm:col-span-2">Data guru (opsional)
-          <select name="personId" defaultValue={u.personId ?? ""} className={sel}><option value="">Tidak dihubungkan</option>
-            {staff.filter((p) => !p.userId || p.userId === u.id).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</select></label>
+          <SelectField name="personId" defaultValue={u.personId ?? ""} className={sel}><option value="">Tidak dihubungkan</option>
+            {staff.filter((p) => !p.userId || p.userId === u.id).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</SelectField></label>
         <fieldset className="sm:col-span-2"><legend className="mb-2 text-sm">Role (boleh lebih dari satu)</legend>
           <div className="flex flex-wrap gap-2">{roles.map((r) => (
-            <label key={r.id} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm"><input type="checkbox" name="roleId" value={r.id} defaultChecked={roleIds.has(r.id)} className="size-4 accent-teal-700" />{r.name}</label>))}</div></fieldset>
+            <label key={r.id} className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm"><Checkbox name="roleId" value={String(r.id)} defaultChecked={roleIds.has(r.id)} className="size-4 accent-teal-700" />{r.name}</label>))}</div></fieldset>
         <div className="sm:col-span-2"><SubmitButton>Simpan perubahan</SubmitButton></div>
       </ActionForm>
     </Modal>

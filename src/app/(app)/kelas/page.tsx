@@ -6,6 +6,7 @@ import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { fullName } from "@/lib/person";
 import { setHomeroom } from "./actions";
+import { SelectField } from "@/components/shared/select-field";
 
 export default async function ClassesPage() {
   await requirePermission("class.manage");
@@ -35,9 +36,9 @@ export default async function ClassesPage() {
               <div className="md:w-44">{!t ? <Pill tone="idle">Belum ada wali kelas</Pill> : t.userId ? <Pill tone="ok">Akun siap</Pill> : <Pill tone="warn">Wali kelas belum punya akun</Pill>}</div>
               <ActionForm action={setHomeroom} className="flex flex-1 flex-wrap gap-2">
                 <input type="hidden" name="classId" value={c.id} />
-                <select name="staffId" defaultValue={c.homeroom ?? ""} className="block h-9 min-w-56 flex-1 border bg-white px-2 text-sm">
+                <SelectField name="staffId" defaultValue={c.homeroom ?? ""} className="block h-9 min-w-56 flex-1 border bg-white px-2 text-sm">
                   <option value="">Belum ada wali kelas</option>{staff.map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}
-                </select>
+                </SelectField>
                 <SubmitButton size="sm" variant="outline">Simpan</SubmitButton>
               </ActionForm>
             </li>);

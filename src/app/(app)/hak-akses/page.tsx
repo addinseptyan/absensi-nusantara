@@ -7,6 +7,9 @@ import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { LOCKED_ADMIN_PERMISSIONS, type PermissionCode } from "@/lib/permissions";
 import { createRole, deleteRole, savePermissions } from "./actions";
+import { SelectField } from "@/components/shared/select-field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default async function AccessPage() {
   await requirePermission("role.manage");
@@ -25,22 +28,22 @@ export default async function AccessPage() {
       <section className="rounded-2xl border bg-white">
         <ActionForm action={savePermissions} confirm={{ title: "Simpan perubahan hak akses?", description: "Perubahan berlaku untuk semua pengguna dengan role terkait saat mereka membuka halaman berikutnya.", label: "Ya, simpan" }}>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="sticky top-0 border-b bg-white"><tr><th className="px-3 py-2 text-left font-medium">Fitur</th>
-                {roles.map((r) => <th key={r.id} className="px-3 text-center font-medium">{r.name}</th>)}</tr></thead>
-              <tbody>{perms.map((p, i) => (
+            <Table className="w-full min-w-[640px] text-sm">
+              <TableHeader className="sticky top-0 border-b bg-white"><TableRow><TableHead className="px-3 py-2 text-left font-medium">Fitur</TableHead>
+                {roles.map((r) => <TableHead key={r.id} className="px-3 text-center font-medium">{r.name}</TableHead>)}</TableRow></TableHeader>
+              <TableBody>{perms.map((p, i) => (
                 <Fragment key={p.code}>
-                  {(i === 0 || perms[i - 1].group !== p.group) && <tr className="bg-slate-50"><td colSpan={roles.length + 1} className="px-3 py-1.5 text-xs font-semibold text-slate-600">{p.group}</td></tr>}
-                  <tr className="border-b last:border-0">
-                    <td className="px-3 py-2"><p>{p.description}</p><p className="text-xs text-slate-400">{p.code}</p></td>
+                  {(i === 0 || perms[i - 1].group !== p.group) && <TableRow className="bg-slate-50"><TableCell colSpan={roles.length + 1} className="px-3 py-1.5 text-xs font-semibold text-slate-600">{p.group}</TableCell></TableRow>}
+                  <TableRow className="border-b last:border-0">
+                    <TableCell className="px-3 py-2"><p>{p.description}</p><p className="text-xs text-slate-400">{p.code}</p></TableCell>
                     {roles.map((r) => {
                       const locked = r.slug === "admin" && LOCKED_ADMIN_PERMISSIONS.includes(p.code as PermissionCode);
-                      return <td key={r.id} className="text-center"><input type="checkbox" name={`p:${r.id}:${p.code}`} defaultChecked={locked || has.has(`${r.id}:${p.code}`)}
-                        disabled={locked} title={locked ? "Terkunci agar admin tidak kehilangan akses" : undefined} className="size-4 accent-teal-700" /></td>;
+                      return <TableCell key={r.id} className="text-center"><Checkbox name={`p:${r.id}:${p.code}`} defaultChecked={locked || has.has(`${r.id}:${p.code}`)}
+                        disabled={locked} title={locked ? "Terkunci agar admin tidak kehilangan akses" : undefined} className="size-4 accent-teal-700" /></TableCell>;
                     })}
-                  </tr>
-                </Fragment>))}</tbody>
-            </table>
+                  </TableRow>
+                </Fragment>))}</TableBody>
+            </Table>
           </div>
           <div className="border-t p-3"><SubmitButton type="submit">Simpan hak akses</SubmitButton></div>
         </ActionForm>
@@ -50,7 +53,7 @@ export default async function AccessPage() {
         <ActionForm action={createRole} className="flex flex-wrap items-end gap-3" reset>
           <label className="space-y-1 text-sm">Nama role baru<Input name="name" placeholder="mis. Kepala Sekolah" required /></label>
           <label className="space-y-1 text-sm">Salin izin dari
-            <select name="copyFrom" className="block h-9 rounded-md border bg-white px-2 text-sm"><option value="">Kosong</option>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
+            <SelectField name="copyFrom" className="block h-9 rounded-md border bg-white px-2 text-sm"><option value="">Kosong</option>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</SelectField></label>
           <SubmitButton type="submit" variant="outline">Tambah role</SubmitButton>
         </ActionForm>
         <div className="flex flex-wrap gap-2">{roles.filter((r) => !r.isSystem).map((r) => (
