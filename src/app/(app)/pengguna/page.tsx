@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth/current-user";
 import { fmtWib } from "@/lib/format";
 import { fullName } from "@/lib/person";
 import { Modal } from "@/components/shared/modal";
+import { PasswordInput } from "@/components/shared/password-input";
 import { createUser, deleteUser, setPassword, toggleActive, updateUser } from "./actions";
 
 export default async function UsersPage() {
@@ -37,7 +38,7 @@ export default async function UsersPage() {
           <label className="space-y-1 text-sm">Nama<Input name="name" required /></label>
           <label className="space-y-1 text-sm">Username<Input name="username" required minLength={3} maxLength={30} autoCapitalize="none" /></label>
           <label className="space-y-1 text-sm">Email (opsional)<Input name="email" type="email" /></label>
-          <label className="space-y-1 text-sm">Kata sandi sementara<Input name="password" type="text" minLength={8} required /></label>
+          <label className="space-y-1 text-sm">Kata sandi sementara<PasswordInput name="password" minLength={8} required autoComplete="new-password" /></label>
           <label className="space-y-1 text-sm">Role<select name="roleId" className={`${sel} block w-full`} required>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
           <label className="space-y-1 text-sm">Data guru (opsional)<select name="personId" className={`${sel} block w-full`}><option value="">Tidak dihubungkan</option>{staff.filter((p) => !p.userId).map((p) => <option key={p.id} value={p.id}>{fullName(p)}</option>)}</select></label>
           <div className="flex items-end"><SubmitButton type="submit">Buat akun</SubmitButton></div>
@@ -54,7 +55,7 @@ export default async function UsersPage() {
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <EditUser u={u} roles={roles} roleIds={roleIdsOf(u.id)} staff={staff} sel={`${sel} block w-full`} />
               <ActionForm action={setPassword} className="flex gap-2" reset><input type="hidden" name="userId" value={u.id} />
-                <Input name="password" placeholder="Sandi baru (min. 8)" minLength={8} required className="w-44" /><SubmitButton type="submit" size="sm" variant="outline">Ganti sandi</SubmitButton></ActionForm>
+                <PasswordInput name="password" placeholder="Sandi baru (min. 8)" minLength={8} required autoComplete="new-password" className="w-44" /><SubmitButton type="submit" size="sm" variant="outline">Ganti sandi</SubmitButton></ActionForm>
               {u.id !== me.id && (<>
                 <ConfirmAction action={toggleActive} fields={{ userId: u.id }} tone="neutral" label={u.isActive ? "Nonaktifkan" : "Aktifkan"}
                   title={u.isActive ? `Nonaktifkan ${u.name}?` : `Aktifkan ${u.name}?`}

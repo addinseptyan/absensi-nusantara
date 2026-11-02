@@ -46,10 +46,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <MobileMenu>{links}{account}</MobileMenu>
       </header>
       <div className="mx-auto flex max-w-6xl gap-4 p-3 md:p-5">
-        <GlassCard className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-60 shrink-0 flex-col gap-1 p-3 md:flex">
-          <div className="px-1 pb-3 pt-1">{brand}</div>
-          <nav className="flex flex-col gap-1">{links}</nav>
-          <div className="mt-auto">{account}</div>
+        <GlassCard className="sticky top-5 hidden h-[calc(100dvh-2.5rem)] w-60 shrink-0 flex-col gap-1 overflow-hidden p-3 md:flex">
+          <div className="shrink-0 px-1 pb-3 pt-1">{brand}</div>
+          <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-0.5">{links}</nav>
+          <div className="shrink-0">{account}</div>
         </GlassCard>
         <main className="min-w-0 flex-1 pb-10">
           {user.mustChangePassword ? <GlassCard className="max-w-md space-y-3 p-5"><h1 className="text-xl font-semibold text-slate-900">Ganti kata sandi</h1><PasswordForm forced /></GlassCard> : children}
