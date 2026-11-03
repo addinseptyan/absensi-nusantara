@@ -38,8 +38,8 @@ const sum = (rows: Cell[][], i: number) => rows.reduce((a, r) => a + Number(r[i]
 const pctOf = (present: number, effective: number) => (effective ? Math.round((present / effective) * 1000) / 10 : null);
 
 /** Rekap siswa per kelas atau semua kelas. */
-export async function loadRekap(user: User, from: string, to: string, kelasId?: number): Promise<RekapData | null> {
-  const classes = await visibleClasses(user);
+export async function loadRekap(user: User, from: string, to: string, kelasId?: number, yearId?: number): Promise<RekapData | null> {
+  const classes = await visibleClasses(user, yearId);
   const selected = classes.find((c) => c.id === kelasId);
   if (kelasId && !selected) return null;
   const rows = await studentSummary(from, to, selected ? [selected.id] : classes.map((c) => c.id));
@@ -73,8 +73,8 @@ export async function loadStaffRekap(user: User, from: string, to: string): Prom
 }
 
 /** Rincian harian satu siswa atau guru (hari libur tanpa scan tidak dicetak). */
-export async function loadDetail(user: User, personId: number, from: string, to: string): Promise<RekapData | null> {
-  const d = await getPersonDetail(user, personId, from, to);
+export async function loadDetail(user: User, personId: number, from: string, to: string, yearId?: number): Promise<RekapData | null> {
+  const d = await getPersonDetail(user, personId, from, to, yearId);
   if (!d) return null;
   const shown = d.rows.filter((r) => r.status !== "libur" || r.checkIn);
   const n = (st: string) => d.rows.filter((r) => r.status === st).length;

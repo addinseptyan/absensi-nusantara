@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useRef, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -93,5 +94,23 @@ export function SubmitButton({ children, pendingText = "Menyimpan…", ...props 
     <Button type="submit" {...props} disabled={pending || props.disabled}>
       {pending ? <><Loader2 className="size-4 animate-spin" />{pendingText}</> : children}
     </Button>
+  );
+}
+
+/** Form filter (pencarian, tanggal, kelas): berpindah lewat navigasi dalam aplikasi, tombolnya menampilkan putaran, dan bagian kosong tidak ikut dikirim. */
+export function FilterForm({ children, ...props }: Omit<React.ComponentProps<"form">, "action" | "onSubmit">) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [pending, start] = useTransition();
+  return (
+    <Pending.Provider value={pending}>
+      <form {...props} onSubmit={(e) => {
+        e.preventDefault();
+        const params = new URLSearchParams();
+        new FormData(e.currentTarget).forEach((v, k) => { if (typeof v === "string" && v !== "") params.set(k, v); });
+        const qs = params.toString();
+        start(() => router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
+      }}>{children}</form>
+    </Pending.Provider>
   );
 }

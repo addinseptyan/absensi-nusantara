@@ -8,7 +8,7 @@ import { isoWeekday, localParts, toMinutes } from "./time";
 type User = { personId: number | null; permissions: string[] };
 
 /** Detail harian satu siswa atau guru. Null jika tidak ada atau pengguna tidak berhak melihatnya. */
-export async function getPersonDetail(user: User, personId: number, from: string, to: string) {
+export async function getPersonDetail(user: User, personId: number, from: string, to: string, yearId?: number) {
   const [p] = await db.select({ id: s.people.id, name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix, type: s.people.type })
     .from(s.people).where(eq(s.people.id, personId));
   if (!p) return null;
@@ -17,9 +17,9 @@ export async function getPersonDetail(user: User, personId: number, from: string
   if (p.type === "student") {
     const [row] = await db.select({ classId: s.classes.id, className: s.classes.name, grade: s.classes.grade }).from(s.classEnrollments)
       .innerJoin(s.classes, eq(s.classes.id, s.classEnrollments.classId))
-      .innerJoin(s.academicYears, and(eq(s.academicYears.id, s.classes.academicYearId), eq(s.academicYears.isActive, true)))
+      .innerJoin(s.academicYears, and(eq(s.academicYears.id, s.classes.academicYearId), yearId ? eq(s.academicYears.id, yearId) : eq(s.academicYears.isActive, true)))
       .where(eq(s.classEnrollments.personId, personId));
-    if (!row || !(await visibleClasses(user)).some((c) => c.id === row.classId)) return null;
+    if (!row || !(await visibleClasses(user, yearId)).some((c) => c.id === row.classId)) return null;
     cls = row;
   } else if (!(can(user.permissions, "rekap.view_all") || (can(user.permissions, "rekap.view_self") && user.personId === p.id))) {
     return null;

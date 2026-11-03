@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateField } from "@/components/shared/date-field";
-import { SubmitButton } from "@/components/shared/action-form";
+import { SubmitButton, FilterForm } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getPersonDetail, rowNotes } from "@/lib/attendance/detail";
@@ -15,14 +15,15 @@ import { can } from "@/lib/permissions";
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const LIST = ["terlambat", "izin", "sakit", "dispensasi", "alpa"] as const;
 
-export default async function PersonDetailPage({ params, searchParams }: { params: Promise<{ personId: string }>; searchParams: Promise<{ from?: string; to?: string; libur?: string }> }) {
+export default async function PersonDetailPage({ params, searchParams }: { params: Promise<{ personId: string }>; searchParams: Promise<{ from?: string; to?: string; libur?: string; tahun?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const [{ personId }, q] = await Promise.all([params, searchParams]);
   const today = localParts(new Date()).date;
   const from = isDate(q.from) ? q.from! : `${today.slice(0, 8)}01`;
   const to = isDate(q.to) ? q.to! : today;
-  const data = Number.isInteger(Number(personId)) ? await getPersonDetail(user, Number(personId), from, to) : null;
+  const tahunId = /^\d+$/.test(q.tahun ?? "") ? Number(q.tahun) : undefined;
+  const data = Number.isInteger(Number(personId)) ? await getPersonDetail(user, Number(personId), from, to, tahunId) : null;
   if (!data) notFound();
 
   const { person, rows } = data;
@@ -31,9 +32,9 @@ export default async function PersonDetailPage({ params, searchParams }: { param
   const effective = present + n("izin") + n("sakit") + n("alpa");
   const pct = effective ? Math.round((present / effective) * 1000) / 10 : null;
   const shown = q.libur ? rows : rows.filter((r) => r.status !== "libur" || r.checkIn);
-  const back = new URLSearchParams({ from, to });
+  const back = new URLSearchParams({ from, to, ...(tahunId && { tahun: String(tahunId) }) });
   const backHref = person.type === "staff" ? (can(user.permissions, "rekap.view_all") ? `/rekap-guru?${back}` : null) : `/rekap?${back}`;
-  const dl = (format: string) => `/api/export/rekap?jenis=detail&personId=${person.id}&from=${from}&to=${to}&format=${format}`;
+  const dl = (format: string) => `/api/export/rekap?jenis=detail&personId=${person.id}&from=${from}&to=${to}${tahunId ? `&tahun=${tahunId}` : ""}&format=${format}`;
 
   return (
     <div className="space-y-4">
@@ -41,12 +42,13 @@ export default async function PersonDetailPage({ params, searchParams }: { param
       <div><h1 className="text-2xl font-semibold text-slate-900">{fullName(person)}</h1><p className="text-sm text-slate-600">{person.className ? `Kelas ${person.className}` : "Guru dan pegawai"}</p></div>
 
       <GlassCard className="p-4">
-        <form className="flex flex-wrap items-end gap-3">
+        <FilterForm className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={from} /></label>
           <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={to} /></label>
           {q.libur && <input type="hidden" name="libur" value="1" />}
-          <SubmitButton>Tampilkan</SubmitButton>
-        </form>
+          {tahunId && <input type="hidden" name="tahun" value={tahunId} />}
+          <SubmitButton pendingText="Memuat…">Tampilkan</SubmitButton>
+        </FilterForm>
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
             <span className="text-sm text-slate-700">Unduh rincian ini:</span>
@@ -68,7 +70,7 @@ export default async function PersonDetailPage({ params, searchParams }: { param
 
       <section className="rounded-2xl border bg-white">
         <div className="flex items-center justify-between border-b p-3"><h2 className="font-medium">Rincian harian</h2>
-          <Link className="text-sm text-teal-800 underline" href={`?${new URLSearchParams({ from, to, ...(q.libur ? {} : { libur: "1" }) })}`}>{q.libur ? "Sembunyikan hari libur" : "Tampilkan hari libur"}</Link></div>
+          <Link className="text-sm text-teal-800 underline" href={`?${new URLSearchParams({ from, to, ...(tahunId && { tahun: String(tahunId) }), ...(q.libur ? {} : { libur: "1" }) })}`}>{q.libur ? "Sembunyikan hari libur" : "Tampilkan hari libur"}</Link></div>
         {shown.length === 0 ? <p className="p-6 text-sm text-slate-600">Belum ada data pada rentang ini. Admin dapat menekan Hitung ulang di halaman rekap.</p> : (
           <Table className="min-w-[640px] text-sm">
             <TableHeader><TableRow><TableHead className="px-3">Tanggal</TableHead><TableHead>Status</TableHead><TableHead>Masuk</TableHead><TableHead>Pulang</TableHead><TableHead>Keterangan</TableHead></TableRow></TableHeader>

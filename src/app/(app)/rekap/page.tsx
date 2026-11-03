@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
+import { ActionForm, ConfirmAction, SubmitButton, FilterForm } from "@/components/shared/action-form";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
@@ -13,27 +13,32 @@ import { recomputeRange } from "./actions";
 import { SelectField } from "@/components/shared/select-field";
 import { DateField } from "@/components/shared/date-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { desc } from "drizzle-orm";
+import { db, schema as s } from "@/db";
 
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const NUM = "px-2 py-2 text-right tabular-nums";
 
-export default async function RekapPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; kelas?: string }> }) {
+export default async function RekapPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; kelas?: string; tahun?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const classes = await visibleClasses(user);
+  const q = await searchParams;
+  const years = await db.select().from(s.academicYears).orderBy(desc(s.academicYears.startDate));
+  const year = years.find((y) => String(y.id) === q.tahun) ?? years.find((y) => y.isActive);
+  const archived = !!year && !year.isActive;
+  const classes = await visibleClasses(user, year?.id);
   if (!classes.length) return <GlassCard className="p-6 text-sm text-slate-700">Anda belum memiliki akses ke rekap kelas mana pun. Hubungi admin sekolah.</GlassCard>;
 
-  const q = await searchParams;
   const today = localParts(new Date()).date;
-  const from = isDate(q.from) ? q.from! : `${today.slice(0, 8)}01`;
-  const to = isDate(q.to) ? q.to! : today;
+  const from = isDate(q.from) ? q.from! : archived ? year!.startDate : `${today.slice(0, 8)}01`;
+  const to = isDate(q.to) ? q.to! : archived ? year!.endDate : today;
   const kelas = classes.find((c) => String(c.id) === q.kelas);
   const rows = await studentSummary(from, to, kelas ? [kelas.id] : classes.map((c) => c.id));
 
   const totals = rows.reduce((a, r) => ({ present: a.present + r.present, effective: a.effective + r.effective, alpa: a.alpa + r.alpa, late: a.late + r.terlambat, pending: a.pending + r.pending }),
     { present: 0, effective: 0, alpa: 0, late: 0, pending: 0 });
   const avg = totals.effective ? Math.round((totals.present / totals.effective) * 1000) / 10 : null;
-  const exportQs = new URLSearchParams({ from, to, ...(kelas && { kelas: String(kelas.id) }) });
+  const exportQs = new URLSearchParams({ from, to, ...(kelas && { kelas: String(kelas.id) }), ...(year && { tahun: String(year.id) }) });
   const exportBtn = "inline-flex h-8 items-center rounded-[var(--radius-control)] border bg-white px-3 text-sm hover:bg-slate-50";
   const tone = (p: number | null) => (p === null ? "idle" : p >= 90 ? "ok" : p >= 80 ? "warn" : "bad") as "ok" | "warn" | "bad" | "idle";
 
@@ -45,7 +50,11 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
       </div>
 
       <GlassCard className="p-4">
-        <form className="flex flex-wrap items-end gap-3">
+        <FilterForm className="flex flex-wrap items-end gap-3">
+          {years.length > 1 && (
+            <label className="space-y-1 text-sm">Tahun ajaran
+              <SelectField name="tahun" defaultValue={year?.id}>{years.map((y) => <option key={y.id} value={y.id}>{y.name}{y.isActive ? " (aktif)" : " (arsip)"}</option>)}</SelectField>
+            </label>)}
           <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={from} /></label>
           <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={to} /></label>
           <label className="space-y-1 text-sm">Kelas
@@ -55,7 +64,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
             </SelectField>
           </label>
           <SubmitButton type="submit">Tampilkan</SubmitButton>
-        </form>
+        </FilterForm>
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
             <span className="text-sm text-slate-700">Unduh rekap ini:</span>
@@ -93,7 +102,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
               <TableBody>{rows.map((r) => (
                 <TableRow key={r.personId} className="border-b last:border-0 hover:bg-slate-50">
                   <TableCell className="px-3 py-2"><HoverCard>
-            <HoverCardTrigger delay={150} render={<Link className="text-teal-800 hover:underline" href={`/rekap/${r.personId}?from=${from}&to=${to}`} />}>{r.name}</HoverCardTrigger>
+            <HoverCardTrigger delay={150} render={<Link className="text-teal-800 hover:underline" href={`/rekap/${r.personId}?from=${from}&to=${to}&tahun=${year?.id ?? ""}`} />}>{r.name}</HoverCardTrigger>
             <HoverCardContent className="w-64 space-y-2 text-sm">
               <div><p className="font-medium">{r.name}</p><p className="text-xs text-muted-foreground">Kelas {r.className}</p></div>
               <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">

@@ -7,7 +7,7 @@ import { can } from "@/lib/permissions";
 const Query = z.object({
   format: z.enum(["xlsx", "pdf"]), from: z.string().date(), to: z.string().date(),
   jenis: z.enum(["siswa", "guru", "detail"]).default("siswa"),
-  kelas: z.coerce.number().int().optional(), personId: z.coerce.number().int().optional(),
+  kelas: z.coerce.number().int().optional(), tahun: z.coerce.number().int().optional(), personId: z.coerce.number().int().optional(),
 });
 
 export async function GET(req: Request) {
@@ -20,8 +20,8 @@ export async function GET(req: Request) {
 
   const { jenis, from, to } = q.data;
   const data = jenis === "guru" ? await loadStaffRekap(user, from, to)
-    : jenis === "detail" ? (q.data.personId ? await loadDetail(user, q.data.personId, from, to) : null)
-    : await loadRekap(user, from, to, q.data.kelas);
+    : jenis === "detail" ? (q.data.personId ? await loadDetail(user, q.data.personId, from, to, q.data.tahun) : null)
+    : await loadRekap(user, from, to, q.data.kelas, q.data.tahun);
   if (!data) return new Response("Data tidak ditemukan atau di luar akses Anda.", { status: 404 });
 
   const file = q.data.format === "pdf" ? await buildPdf(data) : await buildXlsx(data);

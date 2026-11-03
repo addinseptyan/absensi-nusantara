@@ -6,9 +6,9 @@ const cnt = (status: string) =>
   sql<number>`count(*) filter (where ${s.attendanceDaily.status} = ${status})`.mapWith(Number);
 
 /** Kelas yang boleh dilihat pengguna: semua (rekap.view_all) atau hanya kelas yang ia ampu (wali kelas). */
-export async function visibleClasses(user: { personId: number | null; permissions: string[] }) {
+export async function visibleClasses(user: { personId: number | null; permissions: string[] }, yearId?: number) {
   const base = db.select({ id: s.classes.id, name: s.classes.name }).from(s.classes)
-    .innerJoin(s.academicYears, and(eq(s.academicYears.id, s.classes.academicYearId), eq(s.academicYears.isActive, true)));
+    .innerJoin(s.academicYears, and(eq(s.academicYears.id, s.classes.academicYearId), yearId ? eq(s.academicYears.id, yearId) : eq(s.academicYears.isActive, true)));
   if (can(user.permissions, "rekap.view_all")) return base.orderBy(asc(s.classes.name));
   if (!can(user.permissions, "rekap.view_own_class") || !user.personId) return [];
   return base.where(eq(s.classes.homeroomStaffId, user.personId)).orderBy(asc(s.classes.name));
