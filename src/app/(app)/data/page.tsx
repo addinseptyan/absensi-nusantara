@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/shared/action-form";
+import { SubmitButton, FilterForm } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
 import { SelectField } from "@/components/shared/select-field";
+import { dataMenuLabel } from "@/lib/nav";
 
 const STATUS = { active: "Aktif", graduated: "Lulus", moved: "Pindah", inactive: "Nonaktif" } as const;
 const btn = "inline-flex h-9 items-center rounded-[var(--radius-control)] px-3 text-sm font-medium shadow-sm";
@@ -42,8 +43,8 @@ export default async function DataPage({ searchParams }: { searchParams: Promise
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><h1 className="text-2xl font-semibold text-slate-900">Data siswa dan guru</h1>
-          <p className="text-sm text-slate-600">Nama ditulis tanpa gelar. Gelar diisi di kolom terpisah dan hanya tampil di cetakan.</p></div>
+        <div><h1 className="text-2xl font-semibold text-slate-900">{dataMenuLabel(user.permissions).replace(" & ", " dan ")}</h1>
+          <p className="text-sm text-slate-600">{allowed.includes("staff") ? "Nama ditulis tanpa gelar. Gelar guru diisi di kolom terpisah dan hanya tampil di cetakan." : "Nama, NIS, kelas, nomor HP wali, dan PIN mesin absen siswa."}</p></div>
         <div className="flex flex-wrap gap-2"><Button render={<Link href={`/data/baru?jenis=${jenis}`} />} nativeButton={false}>+ Tambah {jenis === "student" ? "siswa" : "guru/pegawai"}</Button>{jenis === "student" && <Button variant="outline" render={<Link href="/data/impor" />} nativeButton={false}>Impor Excel</Button>}</div>
       </div>
 
@@ -51,13 +52,13 @@ export default async function DataPage({ searchParams }: { searchParams: Promise
         {allowed.length > 1 && (
           <div className="flex gap-2">{allowed.map((t) => (
             <Button key={t} variant={t === jenis ? "default" : "outline"} render={<Link href={`/data?jenis=${t}`} />} nativeButton={false}>{t === "student" ? "Siswa" : "Guru dan pegawai"}</Button>))}</div>)}
-        <form className="flex flex-wrap items-end gap-3">
+        <FilterForm className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="jenis" value={jenis} />
           <label className="min-w-48 flex-1 space-y-1 text-sm">Cari<Input name="q" defaultValue={q.q} placeholder="Nama, PIN, atau NIS/NIP" /></label>
           {jenis === "student" && <label className="space-y-1 text-sm">Kelas<SelectField name="kelas" defaultValue={q.kelas ?? ""} className={`block ${sel}`}><option value="">Semua</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField></label>}
           <label className="space-y-1 text-sm">Status<SelectField name="status" defaultValue={status} className={`block ${sel}`}><option value="active">Aktif</option><option value="all">Semua</option>{(["graduated", "moved", "inactive"] as const).map((k) => <option key={k} value={k}>{STATUS[k]}</option>)}</SelectField></label>
-          <SubmitButton>Terapkan</SubmitButton>
-        </form>
+          <SubmitButton pendingText="Memuat…">Terapkan</SubmitButton>
+        </FilterForm>
       </GlassCard>
 
       <section className="rounded-2xl border bg-white">

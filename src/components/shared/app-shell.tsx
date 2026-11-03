@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Activity, Briefcase, CalendarDays, CalendarRange, ClipboardCheck, ClipboardList, Clock, GraduationCap, LayoutDashboard, Lock, School, ScrollText, Settings, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { Activity, Briefcase, CalendarDays, CalendarRange, ClipboardCheck, ClipboardList, Clock, FileSpreadsheet, GraduationCap, LayoutDashboard, Lock, School, ScrollText, Settings, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -9,16 +9,16 @@ import { GlassCard } from "./glass-card";
 import { PasswordForm } from "./password-form";
 
 const ICONS: Record<string, typeof Activity> = {
-  "/rekap": LayoutDashboard, "/rekap-guru": ClipboardList, "/saya": UserCheck, "/kunci": Lock, "/audit": ScrollText, "/pengaturan": Settings, Settings, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase,
+  "/beranda": LayoutDashboard, "/rekap": ClipboardList, "/rekap-guru": FileSpreadsheet, "/saya": UserCheck, "/kunci": Lock, "/audit": ScrollText, "/pengaturan": Settings, Settings, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase,
   "/kalender": CalendarDays, "/tahun-ajaran": CalendarRange, "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
 };
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  const items = (user.mustChangePassword ? [] : allowedNav(user.permissions).filter((n) => n.href !== "/saya" || user.personId)).map(({ href, label }) => {
+  const items = (user.mustChangePassword ? [] : allowedNav(user.permissions).filter((n) => n.href !== "/saya" || user.personId)).map(({ href, label, group }) => {
     const Icon = ICONS[href];
-    return { href, label, icon: <Icon /> };
+    return { href, label, group, icon: <Icon /> };
   });
 
   return (

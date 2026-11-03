@@ -9,6 +9,7 @@ export function dailyRows(date: string, classIds: number[]) {
     personId: s.people.id, name: s.people.name, className: s.classes.name,
     status: s.attendanceDaily.status, checkIn: s.attendanceDaily.checkIn, checkOut: s.attendanceDaily.checkOut,
     isManual: s.attendanceDaily.isManual, note: s.attendanceDaily.note,
+    noCheckOut: s.attendanceDaily.noCheckOut, leftEarly: s.attendanceDaily.leftEarly, excusedExit: s.attendanceDaily.excusedExit,
   })
     .from(s.people)
     .innerJoin(s.classEnrollments, eq(s.classEnrollments.personId, s.people.id))

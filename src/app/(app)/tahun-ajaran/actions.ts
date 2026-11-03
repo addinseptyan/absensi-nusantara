@@ -1,5 +1,5 @@
 "use server";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, schema as s } from "@/db";
@@ -71,5 +71,21 @@ export async function processYearEnd(form: FormData) {
     await audit(user.id, "year.rollover", "academic_years", f.name, { naik: n("naik"), tinggal: n("tinggal"), lulus: n("lulus"), keluar: n("keluar") });
     revalidatePath("/", "layout");
     return `Tahun ajaran ${f.name} aktif: ${n("naik")} naik, ${n("tinggal")} tinggal, ${n("lulus")} lulus, ${n("keluar")} keluar. Atur wali kelas baru di menu Kelas.`;
+  });
+}
+
+/** Perbaiki nama atau tanggal sebuah tahun ajaran (termasuk yang aktif). */
+export async function updateYear(form: FormData) {
+  return guard(async () => {
+    const user = await requirePermission("academic_year.manage");
+    const f = Body.extend({ id: z.coerce.number().int() }).parse(Object.fromEntries(form));
+    if (f.from > f.to) throw new Error("Tanggal selesai harus setelah tanggal mulai.");
+    const others = await db.select().from(s.academicYears).where(ne(s.academicYears.id, f.id));
+    if (others.some((o) => o.name === f.name)) throw new Error(`Nama ${f.name} sudah dipakai tahun ajaran lain.`);
+    if (others.some((o) => !(f.to < o.startDate || f.from > o.endDate))) throw new Error("Rentang tanggal bertabrakan dengan tahun ajaran lain.");
+    await db.update(s.academicYears).set({ name: f.name, startDate: f.from, endDate: f.to }).where(eq(s.academicYears.id, f.id));
+    await audit(user.id, "year.update", "academic_years", String(f.id), f);
+    revalidatePath("/", "layout");
+    return "Tahun ajaran diperbarui. Jika tanggal mulai berubah, tekan Hitung ulang di halaman Rekap agar rekap ikut menyesuaikan.";
   });
 }

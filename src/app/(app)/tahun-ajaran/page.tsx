@@ -7,7 +7,8 @@ import { SelectField } from "@/components/shared/select-field";
 import { db, schema as s } from "@/db";
 import { requirePermission } from "@/lib/auth/current-user";
 import { fmtShort } from "@/lib/format";
-import { processYearEnd } from "./actions";
+import { processYearEnd, updateYear } from "./actions";
+import { Modal } from "@/components/shared/modal";
 
 const day = (d: string) => `${fmtShort(d)} ${d.slice(0, 4)}`;
 
@@ -32,7 +33,7 @@ export default async function YearPage() {
 
       <GlassCard className="p-4 text-sm">
         <p className="mb-2 font-medium">Riwayat tahun ajaran</p>
-        <ul className="space-y-1">{years.map((y) => <li key={y.id} className="flex items-center gap-2"><span className="font-medium">{y.name}</span><span className="text-slate-500">{day(y.startDate)} - {day(y.endDate)}</span>{y.isActive && <Pill tone="ok">Aktif</Pill>}</li>)}</ul>
+        <ul className="space-y-1">{years.map((y) => <li key={y.id} className="flex items-center gap-2"><span className="font-medium">{y.name}</span><span className="text-slate-500">{day(y.startDate)} - {day(y.endDate)}</span>{y.isActive && <Pill tone="ok">Aktif</Pill>}<span className="ml-auto"><EditYear y={y} /></span></li>)}</ul>
       </GlassCard>
 
       <GlassCard className="space-y-4 p-4">
@@ -64,5 +65,19 @@ export default async function YearPage() {
         <p className="text-xs text-slate-500">Siswa yang pindah jurusan: proses seperti biasa, lalu ubah kelasnya di menu Data siswa setelah tahun ajaran baru aktif. Kelas X untuk semua jurusan dibuat otomatis untuk siswa baru.</p>
       </GlassCard>
     </div>
+  );
+}
+
+function EditYear({ y }: { y: { id: number; name: string; startDate: string; endDate: string } }) {
+  return (
+    <Modal label="Ubah" title={`Ubah tahun ajaran ${y.name}`}>
+      <ActionForm action={updateYear} className="grid gap-3 sm:grid-cols-3">
+        <input type="hidden" name="id" value={y.id} />
+        <label className="space-y-1 text-sm">Nama<Input name="name" defaultValue={y.name} placeholder="2026/2027" required /></label>
+        <label className="space-y-1 text-sm">Mulai<DateField name="from" defaultValue={y.startDate} required /></label>
+        <label className="space-y-1 text-sm">Selesai<DateField name="to" defaultValue={y.endDate} required /></label>
+        <div className="sm:col-span-3"><SubmitButton>Simpan perubahan</SubmitButton></div>
+      </ActionForm>
+    </Modal>
   );
 }

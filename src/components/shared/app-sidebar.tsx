@@ -3,16 +3,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown, LogOut, UserRound } from "lucide-react";
 import { logout } from "@/app/login/actions";
+import { NAV_GROUPS } from "@/lib/nav";
 import { LinkPending } from "./link-pending";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
-  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail, useSidebar,
+  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail, useSidebar,
 } from "@/components/ui/sidebar";
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
 
-export function AppSidebar({ items, user }: { items: { href: string; label: string; icon: React.ReactNode }[]; user: { name: string; username: string | null; roles: string[] } }) {
+export function AppSidebar({ items, user }: { items: { href: string; label: string; group: string; icon: React.ReactNode }[]; user: { name: string; username: string | null; roles: string[] } }) {
   const path = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   return (
@@ -26,14 +27,19 @@ export function AppSidebar({ items, user }: { items: { href: string; label: stri
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup><SidebarGroupContent><SidebarMenu>
-          {items.map((i) => (
-            <SidebarMenuItem key={i.href}>
-              <SidebarMenuButton isActive={path.startsWith(i.href)} tooltip={i.label} render={<Link href={i.href} onClick={() => setOpenMobile(false)} />}>
-                {i.icon}<span>{i.label}</span><LinkPending />
-              </SidebarMenuButton>
-            </SidebarMenuItem>))}
-        </SidebarMenu></SidebarGroupContent></SidebarGroup>
+        {NAV_GROUPS.map((g) => ({ g, list: items.filter((i) => i.group === g) })).filter((x) => x.list.length).map(({ g, list }) => (
+          <SidebarGroup key={g || "utama"}>
+            {g && <SidebarGroupLabel>{g}</SidebarGroupLabel>}
+            <SidebarGroupContent><SidebarMenu>
+              {list.map((i) => (
+                <SidebarMenuItem key={i.href}>
+                  {/* aktif hanya jika alamat sama atau di bawahnya (bukan sekadar diawali, agar Rekap guru tidak ikut menyalakan Rekap siswa) */}
+                  <SidebarMenuButton isActive={path === i.href || path.startsWith(`${i.href}/`)} tooltip={i.label} render={<Link href={i.href} onClick={() => setOpenMobile(false)} />}>
+                    {i.icon}<span>{i.label}</span><LinkPending />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>))}
+            </SidebarMenu></SidebarGroupContent>
+          </SidebarGroup>))}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu><SidebarMenuItem>
