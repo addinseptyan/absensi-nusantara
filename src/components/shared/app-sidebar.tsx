@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Check, ChevronsUpDown, LogOut, UserRound } from "lucide-react";
 import { logout } from "@/app/login/actions";
+import { LinkPending } from "./link-pending";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -29,7 +30,7 @@ export function AppSidebar({ items, user }: { items: { href: string; label: stri
           {items.map((i) => (
             <SidebarMenuItem key={i.href}>
               <SidebarMenuButton isActive={path.startsWith(i.href)} tooltip={i.label} render={<Link href={i.href} onClick={() => setOpenMobile(false)} />}>
-                {i.icon}<span>{i.label}</span>
+                {i.icon}<span>{i.label}</span><LinkPending />
               </SidebarMenuButton>
             </SidebarMenuItem>))}
         </SidebarMenu></SidebarGroupContent></SidebarGroup>

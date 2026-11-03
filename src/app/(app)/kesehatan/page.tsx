@@ -1,4 +1,4 @@
-import { count, desc, max } from "drizzle-orm";
+import { count, desc, max, sql } from "drizzle-orm";
 import { ActionForm, ConfirmAction, SubmitButton } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
@@ -26,6 +26,9 @@ export default async function HealthPage() {
     db.select().from(s.systemLogs).orderBy(desc(s.systemLogs.id)).limit(12),
     db.select({ total: count(), lastScan: max(s.rawLogs.punchedAt) }).from(s.rawLogs),
   ]);
+  const t0 = performance.now();
+  for (let i = 0; i < 3; i++) await db.execute(sql`select 1`);
+  const dbMs = Math.round((performance.now() - t0) / 3);
   const online = (d: Date | null) => !!d && Date.now() - new Date(d).getTime() < 120_000;
 
   return (
@@ -54,6 +57,12 @@ export default async function HealthPage() {
         {COMMANDS.map(([type, label]) => (
           <ActionForm key={type} action={sendCommand}><input type="hidden" name="type" value={type} /><SubmitButton variant={type === "diagnose" ? "default" : "outline"} size="sm" pendingText="Mengirim…">{label}</SubmitButton></ActionForm>
         ))}
+      </GlassCard>
+
+      <GlassCard className="space-y-1 p-4">
+        <p className="font-medium">Kecepatan sistem</p>
+        <p className="text-sm text-slate-600">Database: <strong>{dbMs} ms</strong> per permintaan ({dbMs < 50 ? "cepat" : dbMs < 150 ? "cukup" : "lambat"}) · Wilayah server: <strong>{process.env.VERCEL_REGION ?? "tidak diketahui"}</strong></p>
+        {dbMs >= 150 && <p className="text-xs text-amber-800">Database kemungkinan berada jauh dari server. Cek wilayah (region) project di Neon dan wilayah fungsi di Vercel; keduanya sebaiknya di Singapura.</p>}
       </GlassCard>
 
       <GlassCard className="flex flex-wrap items-center gap-3 p-4">

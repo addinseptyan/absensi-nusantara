@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import { id as localeId } from "date-fns/locale";
+import { id as localeId } from "date-fns/locale/id";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

@@ -5,20 +5,21 @@ import { db, schema as s } from "@/db";
 import { can, type PermissionCode } from "@/lib/permissions";
 import { readSession } from "./session";
 
-/** Pengguna login beserta izinnya (izin selalu dibaca dari database, jadi perubahan admin langsung berlaku). */
+/** Pengguna login beserta izin dan role (selalu dibaca dari database, jadi perubahan admin langsung berlaku). */
 export const getCurrentUser = cache(async () => {
   const uid = await readSession();
   if (!uid) return null;
   const [u] = await db.select({ id: s.users.id, name: s.users.name, email: s.users.email, personId: s.users.personId, username: s.users.username, mustChangePassword: s.users.mustChangePassword, isActive: s.users.isActive })
     .from(s.users).where(eq(s.users.id, uid));
   if (!u?.isActive) return null;
-  const rows = await db.selectDistinct({ code: s.rolePermissions.permissionCode })
-    .from(s.userRoles)
-    .innerJoin(s.rolePermissions, eq(s.rolePermissions.roleId, s.userRoles.roleId))
-    .where(eq(s.userRoles.userId, uid));
-  const roleRows = await db.select({ name: s.roles.name }).from(s.userRoles)
-    .innerJoin(s.roles, eq(s.roles.id, s.userRoles.roleId)).where(eq(s.userRoles.userId, uid)).orderBy(asc(s.roles.id));
-  return { ...u, roles: roleRows.map((r) => r.name), permissions: rows.map((r) => r.code) };
+  // izin dan role diambil bersamaan, bukan berurutan
+  const [perms, roleRows] = await Promise.all([
+    db.selectDistinct({ code: s.rolePermissions.permissionCode }).from(s.userRoles)
+      .innerJoin(s.rolePermissions, eq(s.rolePermissions.roleId, s.userRoles.roleId)).where(eq(s.userRoles.userId, uid)),
+    db.select({ name: s.roles.name }).from(s.userRoles)
+      .innerJoin(s.roles, eq(s.roles.id, s.userRoles.roleId)).where(eq(s.userRoles.userId, uid)).orderBy(asc(s.roles.id)),
+  ]);
+  return { ...u, roles: roleRows.map((r) => r.name), permissions: perms.map((r) => r.code) };
 });
 
 /** Dipakai di halaman dan server action: wajib login DAN punya izin (dicek di server). */
