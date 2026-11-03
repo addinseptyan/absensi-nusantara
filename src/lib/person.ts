@@ -8,3 +8,7 @@ export function normalizePhone(v?: string | null): string | null {
   if (!d) return null;
   return d.startsWith("0") ? `62${d.slice(1)}` : d.startsWith("62") ? d : `62${d}`;
 }
+
+/** Rapikan huruf nama: "BUDI SANTOSO" -> "Budi Santoso"; inisial seperti "M." tetap kapital. */
+export const titleCaseName = (n: string) =>
+  n.trim().split(/\s+/).map((w) => (/^[A-Za-z]\.$/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");

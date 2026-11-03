@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Activity, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Clock, GraduationCap, LayoutDashboard, Lock, School, ScrollText, ShieldCheck, UserCheck, Users } from "lucide-react";
+import { Activity, Briefcase, CalendarDays, CalendarRange, ClipboardCheck, ClipboardList, Clock, GraduationCap, LayoutDashboard, Lock, School, ScrollText, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -10,7 +10,7 @@ import { PasswordForm } from "./password-form";
 
 const ICONS: Record<string, typeof Activity> = {
   "/rekap": LayoutDashboard, "/rekap-guru": ClipboardList, "/saya": UserCheck, "/kunci": Lock, "/audit": ScrollText, "/koreksi": ClipboardCheck, "/data": GraduationCap, "/kelas": School, "/pkl": Briefcase,
-  "/kalender": CalendarDays, "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
+  "/kalender": CalendarDays, "/tahun-ajaran": CalendarRange, "/aturan": Clock, "/pengguna": Users, "/hak-akses": ShieldCheck, "/kesehatan": Activity,
 };
 
 export async function AppShell({ children }: { children: React.ReactNode }) {

@@ -9,6 +9,7 @@ export const NAV_ITEMS: { href: string; label: string; perm: PermissionCode | Pe
   { href: "/data", label: "Data siswa & guru", perm: ["student.manage", "staff.manage"] },
   { href: "/kelas", label: "Kelas & wali kelas", perm: "class.manage" },
   { href: "/pkl", label: "PKL", perm: "pkl.manage" },
+  { href: "/tahun-ajaran", label: "Tahun ajaran", perm: "academic_year.manage" },
   { href: "/kalender", label: "Kalender", perm: "calendar.manage" },
   { href: "/aturan", label: "Aturan jam", perm: "settings.rules" },
   { href: "/pengguna", label: "Pengguna", perm: "user.manage" },

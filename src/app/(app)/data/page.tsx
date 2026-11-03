@@ -44,7 +44,7 @@ export default async function DataPage({ searchParams }: { searchParams: Promise
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-2xl font-semibold text-slate-900">Data siswa dan guru</h1>
           <p className="text-sm text-slate-600">Nama ditulis tanpa gelar. Gelar diisi di kolom terpisah dan hanya tampil di cetakan.</p></div>
-        <Button render={<Link href={`/data/baru?jenis=${jenis}`} />} nativeButton={false}>+ Tambah {jenis === "student" ? "siswa" : "guru/pegawai"}</Button>
+        <div className="flex flex-wrap gap-2"><Button render={<Link href={`/data/baru?jenis=${jenis}`} />} nativeButton={false}>+ Tambah {jenis === "student" ? "siswa" : "guru/pegawai"}</Button>{jenis === "student" && <Button variant="outline" render={<Link href="/data/impor" />} nativeButton={false}>Impor Excel</Button>}</div>
       </div>
 
       <GlassCard className="space-y-3 p-4">
