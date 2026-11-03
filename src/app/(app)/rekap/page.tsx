@@ -15,6 +15,8 @@ import { DateField } from "@/components/shared/date-field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { desc } from "drizzle-orm";
 import { db, schema as s } from "@/db";
+import { ExportDialog } from "@/components/shared/export-dialog";
+import { getPrintPlace, signOptions } from "@/lib/export/sign";
 
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const NUM = "px-2 py-2 text-right tabular-nums";
@@ -32,7 +34,9 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
   const today = localParts(new Date()).date;
   const from = isDate(q.from) ? q.from! : archived ? year!.startDate : `${today.slice(0, 8)}01`;
   const to = isDate(q.to) ? q.to! : archived ? year!.endDate : today;
-  const kelas = classes.find((c) => String(c.id) === q.kelas);
+  const canAll = can(user.permissions, "rekap.view_all");
+  const place = await getPrintPlace();
+  const kelas = classes.find((c) => String(c.id) === q.kelas) ?? (canAll ? undefined : classes[0]); // wali kelas: langsung kelasnya
   const rows = await studentSummary(from, to, kelas ? [kelas.id] : classes.map((c) => c.id));
 
   const totals = rows.reduce((a, r) => ({ present: a.present + r.present, effective: a.effective + r.effective, alpa: a.alpa + r.alpa, late: a.late + r.terlambat, pending: a.pending + r.pending }),
@@ -59,7 +63,7 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
           <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={to} /></label>
           <label className="space-y-1 text-sm">Kelas
             <SelectField name="kelas" defaultValue={kelas?.id ?? ""} className="block h-9 rounded-md border bg-white px-3 text-sm">
-              <option value="">Semua kelas</option>
+              {canAll && <option value="">Semua kelas</option>}
               {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </SelectField>
           </label>
@@ -68,8 +72,8 @@ export default async function RekapPage({ searchParams }: { searchParams: Promis
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
             <span className="text-sm text-slate-700">Unduh rekap ini:</span>
-            <Button variant="outline" size="sm" render={<a href={`/api/export/rekap?format=xlsx&${exportQs}`} />} nativeButton={false}>Excel (.xlsx)</Button>
-            <Button variant="outline" size="sm" render={<a href={`/api/export/rekap?format=pdf&${exportQs}`} />} nativeButton={false}>PDF</Button>
+            <ExportDialog params={{ jenis: "siswa", from, to, ...(kelas && { kelas: String(kelas.id) }), ...(year && { tahun: String(year.id) }) }}
+              signOptions={signOptions(!!kelas)} defaultPlace={place} defaultDate={today} />
           </div>
         )}
         {can(user.permissions, "settings.rules") && (

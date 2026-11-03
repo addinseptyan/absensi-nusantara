@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { Input } from "@/components/ui/input";
-import { ActionForm, SubmitButton } from "@/components/shared/action-form";
+import { ActionForm, SubmitButton, FilterForm } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { db, schema as s } from "@/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -13,6 +13,7 @@ import { STATUS_LABEL, STATUS_TONE, fmtTime, fmtWib } from "@/lib/format";
 import { correct, undoCorrection } from "./actions";
 import { SelectField } from "@/components/shared/select-field";
 import { DateField } from "@/components/shared/date-field";
+import { can } from "@/lib/permissions";
 
 const OPTIONS = [["hadir", "Hadir (tanpa scan)"], ["izin", "Izin"], ["sakit", "Sakit"], ["dispensasi", "Dispensasi"], ["alpa", "Alpa"], ["auto", "Kembali ke otomatis"]] as const;
 const sel = "h-9 rounded-md border bg-white px-2 text-sm";
@@ -25,7 +26,7 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
 
   const q = await searchParams;
   const date = /^\d{4}-\d{2}-\d{2}$/.test(q.tanggal ?? "") ? q.tanggal! : localParts(new Date()).date;
-  const kelas = classes.find((c) => String(c.id) === q.kelas);
+  const kelas = classes.find((c) => String(c.id) === q.kelas) ?? (can(user.permissions, "rekap.view_all") ? undefined : classes[0]); // wali kelas: langsung kelasnya
   const all = await dailyRows(date, kelas ? [kelas.id] : classes.map((c) => c.id));
   const rows = q.semua ? all : all.filter((r) => !r.status || r.status === "alpa" || r.status === "belum_ada_data" || r.isManual);
   const base = new URLSearchParams({ tanggal: date, ...(kelas && { kelas: String(kelas.id) }) });
@@ -45,15 +46,15 @@ export default async function KoreksiPage({ searchParams }: { searchParams: Prom
         <p className="text-sm text-slate-600">Tandai siswa yang hadir tapi tidak scan, atau yang izin, sakit, dispensasi. Koreksi tidak tertimpa hitung ulang, dan bisa diurungkan.</p>
       </div>
       <GlassCard className="p-4">
-        <form className="flex flex-wrap items-end gap-3">
+        <FilterForm className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">Tanggal<DateField name="tanggal" defaultValue={date} /></label>
           <label className="space-y-1 text-sm">Kelas
-            <SelectField name="kelas" defaultValue={kelas?.id ?? ""} className={`block ${sel}`}><option value="">Semua kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField>
+            <SelectField name="kelas" defaultValue={kelas?.id ?? ""} className={`block ${sel}`}>{can(user.permissions, "rekap.view_all") && <option value="">Semua kelas</option>}{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField>
           </label>
           {q.semua && <input type="hidden" name="semua" value="1" />}
-          <SubmitButton>Tampilkan</SubmitButton>
+          <SubmitButton pendingText="Memuat…">Tampilkan</SubmitButton>
           <Link className="text-sm text-teal-800 underline" href={`/koreksi?${base}${q.semua ? "" : "&semua=1"}`}>{q.semua ? "Hanya yang perlu dicek" : "Tampilkan semua siswa"}</Link>
-        </form>
+        </FilterForm>
       </GlassCard>
 
       <section className="rounded-2xl border bg-white">

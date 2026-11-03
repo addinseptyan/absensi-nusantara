@@ -2,13 +2,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateField } from "@/components/shared/date-field";
-import { SubmitButton } from "@/components/shared/action-form";
+import { SubmitButton, FilterForm } from "@/components/shared/action-form";
 import { GlassCard, Pill } from "@/components/shared/glass-card";
 import { requirePermission } from "@/lib/auth/current-user";
 import { staffSummary } from "@/lib/attendance/summary";
 import { localParts } from "@/lib/attendance/time";
 import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
+import { ExportDialog } from "@/components/shared/export-dialog";
+import { getPrintPlace, signOptions } from "@/lib/export/sign";
 
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const NUM = "px-2 text-right tabular-nums";
@@ -28,16 +30,15 @@ export default async function StaffRecapPage({ searchParams }: { searchParams: P
       <div><h1 className="text-2xl font-semibold text-slate-900">Rekap guru dan pegawai</h1>
         <p className="text-sm text-slate-600">Hari efektif adalah hari wajib hadir masing-masing. Scan di luar jadwal dicatat sebagai "scan tambahan" dan tidak memengaruhi persentase.</p></div>
       <GlassCard className="p-4">
-        <form className="flex flex-wrap items-end gap-3">
+        <FilterForm className="flex flex-wrap items-end gap-3">
           <label className="space-y-1 text-sm">Dari<DateField name="from" defaultValue={from} /></label>
           <label className="space-y-1 text-sm">Sampai<DateField name="to" defaultValue={to} /></label>
-          <SubmitButton>Tampilkan</SubmitButton>
-        </form>
+          <SubmitButton pendingText="Memuat…">Tampilkan</SubmitButton>
+        </FilterForm>
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
             <span className="text-sm text-slate-700">Unduh rekap ini:</span>
-            <Button variant="outline" size="sm" render={<a href={`/api/export/rekap?jenis=guru&format=xlsx&${qs}`} />} nativeButton={false}>Excel (.xlsx)</Button>
-            <Button variant="outline" size="sm" render={<a href={`/api/export/rekap?jenis=guru&format=pdf&${qs}`} />} nativeButton={false}>PDF</Button>
+            <ExportDialog params={{ jenis: "guru", from, to }} signOptions={signOptions(false)} defaultPlace={await getPrintPlace()} defaultDate={today} />
           </div>)}
       </GlassCard>
       <section className="rounded-2xl border bg-white">

@@ -33,7 +33,7 @@ export async function savePerson(form: FormData) {
       if (dup) throw new Error(`PIN mesin ${pin} sudah dipakai oleh ${dup.name}.`);
     }
     const values = {
-      name: f.name, titlePrefix: empty(f.titlePrefix), titleSuffix: empty(f.titleSuffix), devicePin: pin, status: f.status,
+      name: f.name, titlePrefix: type === "staff" ? empty(f.titlePrefix) : null, titleSuffix: type === "staff" ? empty(f.titleSuffix) : null, // gelar hanya untuk guru devicePin: pin, status: f.status,
       nis: type === "student" ? empty(f.nis) : null, nip: type === "staff" ? empty(f.nip) : null, parentPhone: normalizePhone(f.parentPhone),
     };
     const personId = id ?? (await db.insert(s.people).values({ type, ...values }).returning({ id: s.people.id }))[0].id;

@@ -8,46 +8,65 @@ import { staffSummary, studentSummary, visibleClasses } from "@/lib/attendance/s
 import { STATUS_LABEL, fmtDay, fmtTime } from "@/lib/format";
 import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
+import type { SignMode } from "./sign";
 
 type User = { personId: number | null; permissions: string[] };
 type Cell = string | number | null;
+export type Signer = { jabatan: string; nama: string; nip?: string | null };
 
 /** Satu bentuk data untuk semua jenis laporan; pembuat Excel dan PDF hanya membaca bentuk ini. */
 export type RekapData = {
-  school: string; principal: string; wali: string; leftSign: string | null;
+  school: string; kepsek: Signer; wali: Signer | null; place: string; date: Date; mode: SignMode;
   title: string; subtitle: string; summary?: string;
   head: string[]; widths: number[]; leftCols: number[]; pctCol: number | null;
   table: Cell[][]; total: Cell[] | null; filename: string;
 };
 
+const DOTS_J = "……………………………";
+const DOTS_N = "(……………………………)";
 const fmtLong = (d: Date) => d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "long", year: "numeric" });
-const period = (from: string, to: string) => `${fmtLong(new Date(`${from}T00:00:00Z`))} s/d ${fmtLong(new Date(`${to}T00:00:00Z`))}`;
+const period = (from: string, to: string) => `${fmtLong(new Date(`${from}T12:00:00+07:00`))} s/d ${fmtLong(new Date(`${to}T12:00:00+07:00`))}`;
 const safe = (v: string) => v.replace(/[^A-Za-z0-9]+/g, "-");
 
-async function school() {
-  const cfg = await db.select().from(s.settings).where(inArray(s.settings.key, ["school_name", "principal_name"]));
-  const get = (k: string) => String(cfg.find((c) => c.key === k)?.value ?? "");
-  return { school: get("school_name") || "SMKS Nusantara Banyuwangi", principal: get("principal_name") };
+/** Daftar penanda tangan menurut pilihan pengguna. Nama kosong diganti titik-titik. */
+export function signersOf(d: RekapData): Signer[] {
+  const dots: Signer = { jabatan: DOTS_J, nama: DOTS_N };
+  switch (d.mode) {
+    case "none": return [];
+    case "manual": return [dots, dots];
+    case "kepsek": return [d.kepsek];
+    case "wali": return [d.wali ?? dots];
+    case "wali_kepsek": return [d.wali ?? dots, d.kepsek];
+    default: return d.wali ? [d.wali, d.kepsek] : [d.kepsek];
+  }
 }
-async function homeroom(classId: number) {
-  const [w] = await db.select({ name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix }).from(s.classes)
+
+async function school() {
+  const keys = ["school_name", "principal_name", "principal_nip", "principal_title", "print_place"];
+  const cfg = await db.select().from(s.settings).where(inArray(s.settings.key, keys));
+  const get = (k: string) => String(cfg.find((c) => c.key === k)?.value ?? "").trim();
+  const kepsek: Signer = { jabatan: get("principal_title") || "Kepala Sekolah", nama: get("principal_name") || DOTS_N, nip: get("principal_nip") || null };
+  return { school: get("school_name") || "SMKS Nusantara Banyuwangi", place: get("print_place") || "Banyuwangi", date: new Date(), mode: "auto" as SignMode, kepsek };
+}
+async function homeroom(classId: number): Promise<Signer | null> {
+  const [w] = await db.select({ name: s.people.name, titlePrefix: s.people.titlePrefix, titleSuffix: s.people.titleSuffix, nip: s.people.nip }).from(s.classes)
     .innerJoin(s.people, eq(s.people.id, s.classes.homeroomStaffId)).where(eq(s.classes.id, classId));
-  return w ? fullName(w) : "";
+  return w ? { jabatan: "Wali Kelas", nama: fullName(w), nip: w.nip } : null;
 }
 const sum = (rows: Cell[][], i: number) => rows.reduce((a, r) => a + Number(r[i]), 0);
 const pctOf = (present: number, effective: number) => (effective ? Math.round((present / effective) * 1000) / 10 : null);
 
-/** Rekap siswa per kelas atau semua kelas. */
+/** Rekap siswa per kelas atau semua kelas. Jika pengguna hanya punya satu kelas (wali kelas), kelas itu otomatis dipakai. */
 export async function loadRekap(user: User, from: string, to: string, kelasId?: number, yearId?: number): Promise<RekapData | null> {
   const classes = await visibleClasses(user, yearId);
-  const selected = classes.find((c) => c.id === kelasId);
-  if (kelasId && !selected) return null;
+  if (kelasId && !classes.some((c) => c.id === kelasId)) return null;
+  const selected = classes.find((c) => c.id === kelasId) ?? (classes.length === 1 ? classes[0] : undefined);
   const rows = await studentSummary(from, to, selected ? [selected.id] : classes.map((c) => c.id));
   const table: Cell[][] = rows.map((r, i) => [i + 1, r.name, r.className, r.effective, r.hadir + r.terlambat, r.terlambat, r.izin, r.sakit, r.dispensasi, r.pkl, r.alpa, r.pct]);
   const present = rows.reduce((a, r) => a + r.present, 0), effective = rows.reduce((a, r) => a + r.effective, 0);
   const kelas = selected?.name ?? "Semua kelas";
   return {
-    ...(await school()), wali: selected ? await homeroom(selected.id) : "", leftSign: "Wali Kelas",
+    ...(await school()), wali: selected ? await homeroom(selected.id) : null,
     title: "REKAP KEHADIRAN SISWA", subtitle: `Periode: ${period(from, to)}   |   Kelas: ${kelas}`,
     head: ["No", "Nama", "Kelas", "Hari efektif", "Hadir", "Terlambat", "Izin", "Sakit", "Dispensasi", "PKL", "Alpa", "Kehadiran"],
     widths: [5, 30, 11, 12, 9, 11, 7, 7, 12, 7, 7, 12], leftCols: [1, 2], pctCol: 11,
@@ -63,7 +82,7 @@ export async function loadStaffRekap(user: User, from: string, to: string): Prom
   const table: Cell[][] = rows.map((r, i) => [i + 1, fullName(r), r.effective, r.hadir + r.terlambat, r.terlambat, r.izin, r.sakit, r.dispensasi, r.alpa, r.extra, r.pct]);
   const present = rows.reduce((a, r) => a + r.present, 0), effective = rows.reduce((a, r) => a + r.effective, 0);
   return {
-    ...(await school()), wali: "", leftSign: null,
+    ...(await school()), wali: null,
     title: "REKAP KEHADIRAN GURU DAN PEGAWAI", subtitle: `Periode: ${period(from, to)}`,
     head: ["No", "Nama", "Hari wajib", "Hadir", "Terlambat", "Izin", "Sakit", "Dispensasi", "Alpa", "Scan tambahan", "Kehadiran"],
     widths: [5, 36, 11, 9, 11, 7, 7, 12, 7, 15, 12], leftCols: [1], pctCol: 10,
@@ -81,7 +100,7 @@ export async function loadDetail(user: User, personId: number, from: string, to:
   const present = n("hadir") + n("terlambat") + n("dispensasi"), effective = present + n("izin") + n("sakit") + n("alpa");
   const p = pctOf(present, effective);
   return {
-    ...(await school()), wali: d.person.classId ? await homeroom(d.person.classId) : "", leftSign: d.person.classId ? "Wali Kelas" : null,
+    ...(await school()), wali: d.person.classId ? await homeroom(d.person.classId) : null,
     title: "RINCIAN KEHADIRAN", subtitle: `${fullName(d.person)}   |   ${d.person.className ? `Kelas ${d.person.className}` : "Guru dan pegawai"}   |   ${period(from, to)}`,
     summary: `Hari efektif ${effective}: hadir ${n("hadir") + n("terlambat")} (terlambat ${n("terlambat")}), izin ${n("izin")}, sakit ${n("sakit")}, dispensasi ${n("dispensasi")}, alpa ${n("alpa")}. Kehadiran ${p === null ? "-" : `${p}%`}.`,
     head: ["No", "Tanggal", "Status", "Masuk", "Pulang", "Keterangan"], widths: [5, 26, 14, 9, 9, 48], leftCols: [1, 5], pctCol: null,
@@ -112,10 +131,18 @@ export async function buildXlsx(d: RekapData) {
     if (d.total && i === all.length - 1) row.font = { bold: true };
   });
   d.widths.forEach((w, i) => (ws.getColumn(i + 1).width = w));
-  const r = ws.rowCount + 3, rightCol = Math.max(3, last - 2);
-  ws.getCell(r, rightCol).value = `Banyuwangi, ${fmtLong(new Date())}`; // di atas Kepala Sekolah
-  if (d.leftSign) { ws.getCell(r + 1, 2).value = d.leftSign; ws.getCell(r + 5, 2).value = d.wali || "(.....................)"; }
-  ws.getCell(r + 1, rightCol).value = "Kepala Sekolah"; ws.getCell(r + 5, rightCol).value = d.principal || "(.....................)";
+
+  const sig = signersOf(d);
+  if (sig.length) {
+    const r = ws.rowCount + 3, right = Math.max(3, last - 2);
+    const cols = sig.length === 1 ? [right] : sig.length === 2 ? [2, right] : [2, Math.round((2 + right) / 2), right];
+    ws.getCell(r, right).value = `${d.place}, ${fmtLong(d.date)}`; // di atas penanda tangan paling kanan
+    sig.forEach((g, i) => {
+      ws.getCell(r + 1, cols[i]).value = g.jabatan; ws.getCell(r + 5, cols[i]).value = g.nama;
+      ws.getCell(r + 5, cols[i]).font = { bold: true };
+      if (g.nip) ws.getCell(r + 6, cols[i]).value = `NIP. ${g.nip}`;
+    });
+  }
   return { body: new Uint8Array(await wb.xlsx.writeBuffer()), type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ext: "xlsx" };
 }
 
@@ -131,13 +158,20 @@ export async function buildPdf(d: RekapData) {
   autoTable(doc, {
     startY: y0, head: [d.head], body: d.table.map(cell), foot: d.total ? [cell(d.total)] : undefined, showFoot: "lastPage",
     styles: { fontSize: 8, cellPadding: 1.5 }, headStyles: { fillColor: [15, 118, 110] }, footStyles: { fillColor: [226, 232, 240], textColor: 20, fontStyle: "bold" },
-    // Rata untuk semua bagian (judul, isi, total) agar baris total sejajar dengan kolomnya
     didParseCell: (c) => { c.cell.styles.halign = d.leftCols.includes(c.column.index) ? "left" : "center"; },
   });
-  let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
-  if (y > doc.internal.pageSize.getHeight() - 45) { doc.addPage(); y = 20; }
-  doc.setFontSize(10).text(`Banyuwangi, ${fmtLong(new Date())}`, w - 50, y, { align: "center" });
-  if (d.leftSign) { doc.text(d.leftSign, 40, y + 6, { align: "center" }); doc.text(d.wali || "(.....................)", 40, y + 28, { align: "center" }); }
-  doc.text("Kepala Sekolah", w - 50, y + 6, { align: "center" }); doc.text(d.principal || "(.....................)", w - 50, y + 28, { align: "center" });
+  const sig = signersOf(d);
+  if (sig.length) {
+    let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    if (y > doc.internal.pageSize.getHeight() - 50) { doc.addPage(); y = 20; }
+    const xs = sig.length === 1 ? [w - 50] : sig.length === 2 ? [40, w - 50] : [40, w / 2, w - 50];
+    doc.setFontSize(10).text(`${d.place}, ${fmtLong(d.date)}`, xs[xs.length - 1], y, { align: "center" });
+    sig.forEach((g, i) => {
+      doc.setFont("helvetica", "normal").text(g.jabatan, xs[i], y + 6, { align: "center", maxWidth: 70 });
+      doc.setFont("helvetica", "bold").text(g.nama, xs[i], y + 28, { align: "center", maxWidth: 70 });
+      doc.setFont("helvetica", "normal");
+      if (g.nip) doc.text(`NIP. ${g.nip}`, xs[i], y + 33, { align: "center" });
+    });
+  }
   return { body: new Uint8Array(doc.output("arraybuffer")), type: "application/pdf", ext: "pdf" };
 }

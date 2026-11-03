@@ -11,6 +11,8 @@ import { localParts } from "@/lib/attendance/time";
 import { STATUS_LABEL, STATUS_TONE, fmtDay, fmtShort, fmtTime } from "@/lib/format";
 import { fullName } from "@/lib/person";
 import { can } from "@/lib/permissions";
+import { ExportDialog } from "@/components/shared/export-dialog";
+import { getPrintPlace, signOptions } from "@/lib/export/sign";
 
 const isDate = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const LIST = ["terlambat", "izin", "sakit", "dispensasi", "alpa"] as const;
@@ -52,8 +54,8 @@ export default async function PersonDetailPage({ params, searchParams }: { param
         {can(user.permissions, "rekap.export") && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/60 pt-3">
             <span className="text-sm text-slate-700">Unduh rincian ini:</span>
-            <Button variant="outline" size="sm" render={<a href={dl("xlsx")} />} nativeButton={false}>Excel (.xlsx)</Button>
-            <Button variant="outline" size="sm" render={<a href={dl("pdf")} />} nativeButton={false}>PDF</Button>
+            <ExportDialog params={{ jenis: "detail", personId: String(person.id), from, to, ...(tahunId && { tahun: String(tahunId) }) }}
+              signOptions={signOptions(!!person.classId)} defaultPlace={await getPrintPlace()} defaultDate={today} />
           </div>
         )}
       </GlassCard>

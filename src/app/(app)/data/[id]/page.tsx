@@ -42,8 +42,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         <ActionForm action={savePerson} reset={isNew} className="grid gap-4 sm:grid-cols-2">
           <input type="hidden" name="type" value={type} />{person && <input type="hidden" name="id" value={person.id} />}
           <label className="space-y-1 text-sm sm:col-span-2">Nama (tanpa gelar)<Input name="name" defaultValue={person?.name} required maxLength={100} /></label>
+          {type === "staff" && (<>
           <label className="space-y-1 text-sm">Gelar depan<Input name="titlePrefix" defaultValue={person?.titlePrefix ?? ""} placeholder="mis. Drs." maxLength={30} /></label>
           <label className="space-y-1 text-sm">Gelar belakang<Input name="titleSuffix" defaultValue={person?.titleSuffix ?? ""} placeholder="mis. S.Pd., M.Pd." maxLength={30} /></label>
+          </>)}
           {type === "student" ? (<>
             <label className="space-y-1 text-sm">NIS<Input name="nis" defaultValue={person?.nis ?? ""} maxLength={30} inputMode="numeric" /></label>
             <label className="space-y-1 text-sm">Kelas (tahun ajaran aktif)<SelectField name="classId" defaultValue={currentClass ?? ""} className={sel}><option value="">Belum ada kelas</option>{classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</SelectField></label>
