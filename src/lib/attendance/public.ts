@@ -1,5 +1,6 @@
 import { and, asc, eq, max } from "drizzle-orm";
 import { db, schema as s } from "@/db";
+import { maskName } from "@/lib/person";
 import { dailyRows } from "./daily";
 import { localParts } from "./time";
 
@@ -24,6 +25,8 @@ export async function getTodayOverview() {
   const [{ synced }] = await db.select({ synced: max(s.syncRuns.finishedAt) }).from(s.syncRuns).where(eq(s.syncRuns.status, "success"));
   const total = blank(), per = new Map<string, Count>();
   for (const r of rows) { bump(total, r.status); const c = per.get(r.className) ?? blank(); bump(c, r.status); per.set(r.className, c); }
-  return { date, total, perClass: [...per].map(([name, c]) => ({ name, ...c })), syncedAt: synced ? new Date(synced) : null };
+  return { date, total, perClass: [...per].map(([name, c]) => ({ name, ...c })),
+    // hanya nama disamarkan, kelas, status, dan jam masuk; tanpa NIS, PIN, atau keterangan
+    students: rows.map((r) => ({ name: maskName(r.name), className: r.className, status: r.status, checkIn: r.checkIn })), syncedAt: synced ? new Date(synced) : null };
 }
 export const required = (c: Count) => c.total - c.pkl - c.libur;

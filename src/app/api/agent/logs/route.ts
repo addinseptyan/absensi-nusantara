@@ -1,11 +1,13 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, min, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema as s } from "@/db";
 import { authenticateAgent, badRequest, unauthorized } from "@/lib/agent-auth";
+import { recompute } from "@/lib/attendance/recompute";
+import { addDays, localParts } from "@/lib/attendance/time";
 
 
 const Body = z.object({
-  syncRunId: z.number().int().optional(),
+  syncRunId: z.number().int().nullish(),
   trigger: z.enum(["schedule", "manual"]).default("schedule"),
   logs: z.array(z.object({
     pin: z.string().min(1).max(20),
@@ -25,7 +27,7 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.flatten());
   const { logs, trigger, final, error } = parsed.data;
-  let runId = parsed.data.syncRunId;
+  let runId = parsed.data.syncRunId ?? undefined;
 
   if (!runId) {
     const [run] = await db.insert(s.syncRuns).values({ deviceId: agent.deviceId, trigger }).returning({ id: s.syncRuns.id });
@@ -63,7 +65,24 @@ export async function POST(req: Request) {
     }),
   }).where(eq(s.syncRuns.id, runId));
 
-  if (done && !error) await db.update(s.devices).set({ lastSeenAt: new Date() }).where(eq(s.devices.id, agent.deviceId));
+  let recomputed = false;
+  if (done && !error) {
+    await db.update(s.devices).set({ lastSeenAt: new Date() }).where(eq(s.devices.id, agent.deviceId));
+    // Setelah sync sukses, rekap langsung dihitung ulang: dari tanggal scan terlama yang baru masuk (minimal kemarin) sampai hari ini.
+    // Hari ini ikut dihitung karena status "alpa" baru muncul setelah sync sesudah jam pulang.
+    try {
+      const today = localParts(new Date()).date;
+      const [{ first }] = await db.select({ first: min(s.rawLogs.punchedAt) }).from(s.rawLogs).where(eq(s.rawLogs.syncRunId, runId));
+      let from = addDays(today, -1);
+      if (first && localParts(new Date(first)).date < from) from = localParts(new Date(first)).date;
+      if (from < addDays(today, -31)) from = addDays(today, -31); // sync pertama yang sangat panjang: sisanya lewat tombol Hitung ulang
+      await recompute(from, today);
+      recomputed = true;
+      await db.insert(s.systemLogs).values({ source: "web", level: "info", message: `Rekap dihitung ulang otomatis setelah sync (${from} s/d ${today}).` });
+    } catch (e) {
+      await db.insert(s.systemLogs).values({ source: "web", level: "error", message: "Hitung ulang otomatis setelah sync gagal. Tekan Hitung ulang di halaman Rekap.", context: { error: String(e).slice(0, 500) } });
+    }
+  }
 
-  return Response.json({ syncRunId: runId, received: logs.length, new: newCount });
+  return Response.json({ syncRunId: runId, received: logs.length, new: newCount, recomputed });
 }

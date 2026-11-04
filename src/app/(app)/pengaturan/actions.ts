@@ -12,7 +12,7 @@ const Body = z.object({
   principal_title: z.string().trim().max(60),
   principal_name: z.string().trim().max(120),
   principal_nip: z.string().trim().max(30),
-  public_overview: z.enum(["1", "0"]),
+  public_overview: z.enum(["0", "1", "2"]),
 });
 
 export async function saveSchoolSettings(form: FormData) {

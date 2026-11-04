@@ -12,3 +12,7 @@ export function normalizePhone(v?: string | null): string | null {
 /** Rapikan huruf nama: "BUDI SANTOSO" -> "Budi Santoso"; inisial seperti "M." tetap kapital. */
 export const titleCaseName = (n: string) =>
   n.trim().split(/\s+/).map((w) => (/^[A-Za-z]\.$/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");
+
+/** Samarkan nama untuk tampilan umum: dua huruf pertama tiap kata, sisanya bintang. "Bunga Ayu" -> "Bu*** Ay*". */
+export const maskName = (n: string) =>
+  n.trim().split(/\s+/).map((w) => (w.length <= 2 ? `${w.charAt(0)}*` : `${w.slice(0, 2)}${"*".repeat(w.length - 2)}`)).join(" ");
