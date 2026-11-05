@@ -54,7 +54,7 @@ export default async function StaffRecapPage({ searchParams }: { searchParams: P
                      <TableHead className="px-3 text-right">Kehadiran</TableHead></TableRow></TableHeader>
                   <TableBody>{rows.map((r) => (
                      <TableRow key={r.personId}>
-                        <TableCell className="px-3"><Link className="text-teal-800 hover:underline" href={`/rekap/${r.personId}?${qs}`}>{fullName(r)}</Link></TableCell>
+                        <TableCell className="px-3"><Link className="text-teal-800 hover:underline" href={`/rekap-guru/${r.personId}?${qs}`}>{fullName(r)}</Link></TableCell>
                         <TableCell className={NUM}>{r.effective}</TableCell><TableCell className={NUM}>{r.hadir + r.terlambat}</TableCell><TableCell className={NUM}>{r.terlambat}</TableCell>
                         <TableCell className={NUM}>{r.izin}</TableCell><TableCell className={NUM}>{r.sakit}</TableCell><TableCell className={NUM}>{r.dispensasi}</TableCell>
                         <TableCell className={`${NUM} ${r.alpa ? "font-medium text-red-700" : ""}`}>{r.alpa}</TableCell><TableCell className={NUM}>{r.extra}</TableCell>
