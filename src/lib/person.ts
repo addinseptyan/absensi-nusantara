@@ -1,18 +1,21 @@
 /** Nama lengkap dengan gelar: "Drs. Budi Santoso, M.Pd." Nama di database tetap bersih tanpa gelar. */
 export const fullName = (p: { name: string; titlePrefix?: string | null; titleSuffix?: string | null }) =>
-  `${[p.titlePrefix, p.name].filter(Boolean).join(" ")}${p.titleSuffix ? `, ${p.titleSuffix}` : ""}`;
+   `${[p.titlePrefix, p.name].filter(Boolean).join(" ")}${p.titleSuffix ? `, ${p.titleSuffix}` : ""}`;
 
 /** Nomor HP ke format 62xxxxxxxx (siap dipakai WhatsApp). Kosong tetap null. */
 export function normalizePhone(v?: string | null): string | null {
-  const d = (v ?? "").replace(/\D/g, "");
-  if (!d) return null;
-  return d.startsWith("0") ? `62${d.slice(1)}` : d.startsWith("62") ? d : `62${d}`;
+   const d = (v ?? "").replace(/\D/g, "");
+   if (!d) return null;
+   return d.startsWith("0") ? `62${d.slice(1)}` : d.startsWith("62") ? d : `62${d}`;
 }
 
 /** Rapikan huruf nama: "BUDI SANTOSO" -> "Budi Santoso"; inisial seperti "M." tetap kapital. */
 export const titleCaseName = (n: string) =>
-  n.trim().split(/\s+/).map((w) => (/^[A-Za-z]\.$/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");
+   n.trim().split(/\s+/).map((w) => (/^[A-Za-z]\.$/.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");
 
 /** Samarkan nama untuk tampilan umum: dua huruf pertama tiap kata, sisanya bintang. "Bunga Ayu" -> "Bu*** Ay*". */
+// export const maskName = (n: string) =>
+//   n.trim().split(/\s+/).map((w) => (w.length <= 2 ? `${w.charAt(0)}*` : `${w.slice(0, 2)}${"*".repeat(w.length - 2)}`)).join(" ");
+// Adi Bagas Alexander $\rightarrow$ Ad* Baga* Alex*****
 export const maskName = (n: string) =>
-  n.trim().split(/\s+/).map((w) => (w.length <= 2 ? `${w.charAt(0)}*` : `${w.slice(0, 2)}${"*".repeat(w.length - 2)}`)).join(" ");
+   n.trim().split(/\s+/).map((w) => (w.length <= 3 ? `${w.slice(0, -1)}*` : `${w.slice(0, 3)}${"*".repeat(w.length - 3)}`)).join(" ");
